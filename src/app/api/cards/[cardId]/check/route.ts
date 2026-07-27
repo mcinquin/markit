@@ -4,12 +4,16 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getCardIfMember } from "@/lib/authz";
 
-export async function POST(req: Request, { params }: { params: { cardId: string } }) {
+type RouteContext = { params: Promise<{ cardId: string }> };
+
+export async function POST(req: Request, { params }: RouteContext) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
+  const { cardId } = await params;
+
   // Vérifie que l'utilisateur appartient à l'équipe de cette grille
-  const access = await getCardIfMember(session.user.id, params.cardId);
+  const access = await getCardIfMember(session.user.id, cardId);
   if (!access) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   const body = await req.json();
@@ -24,7 +28,7 @@ export async function POST(req: Request, { params }: { params: { cardId: string 
 
   // Vérifie que la cellule appartient bien à cette grille (pas d'IDOR inter-grilles)
   const cell = await prisma.cell.findFirst({
-    where: { id: cellId, cardId: params.cardId },
+    where: { id: cellId, cardId },
   });
   if (!cell) return NextResponse.json({ error: "Case introuvable" }, { status: 404 });
 
@@ -37,7 +41,7 @@ export async function POST(req: Request, { params }: { params: { cardId: string 
     });
 
     if (global.io) {
-      global.io.to(`card:${params.cardId}`).emit("cell-updated", {
+      global.io.to(`card:${cardId}`).emit("cell-updated", {
         cellId,
         checked: true,
         userName: session.user.name || session.user.email,
@@ -49,7 +53,7 @@ export async function POST(req: Request, { params }: { params: { cardId: string 
     await prisma.checkedCell.deleteMany({ where: { cellId } });
 
     if (global.io) {
-      global.io.to(`card:${params.cardId}`).emit("cell-updated", {
+      global.io.to(`card:${cardId}`).emit("cell-updated", {
         cellId,
         checked: false,
         userName: session.user.name || session.user.email,

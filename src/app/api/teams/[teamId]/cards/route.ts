@@ -9,15 +9,19 @@ const MAX_LABEL_LENGTH = 150;
 const MAX_GRID_SIZE = 10;
 const MIN_GRID_SIZE = 2;
 
-export async function GET(_req: Request, { params }: { params: { teamId: string } }) {
+type RouteContext = { params: Promise<{ teamId: string }> };
+
+export async function GET(_req: Request, { params }: RouteContext) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const membership = await getTeamMembership(session.user.id, params.teamId);
+  const { teamId } = await params;
+
+  const membership = await getTeamMembership(session.user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   const cards = await prisma.bingoCard.findMany({
-    where: { teamId: params.teamId },
+    where: { teamId },
     include: {
       cells: {
         include: {
@@ -33,11 +37,13 @@ export async function GET(_req: Request, { params }: { params: { teamId: string 
   return NextResponse.json(cards);
 }
 
-export async function POST(req: Request, { params }: { params: { teamId: string } }) {
+export async function POST(req: Request, { params }: RouteContext) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const membership = await getTeamMembership(session.user.id, params.teamId);
+  const { teamId } = await params;
+
+  const membership = await getTeamMembership(session.user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   const body = await req.json();
@@ -74,7 +80,7 @@ export async function POST(req: Request, { params }: { params: { teamId: string 
   const validPhrases = await prisma.phrase.findMany({
     where: {
       id: { in: phraseIds },
-      OR: [{ isDefault: true }, { teamId: params.teamId }],
+      OR: [{ isDefault: true }, { teamId }],
     },
     select: { id: true },
   });
@@ -96,7 +102,7 @@ export async function POST(req: Request, { params }: { params: { teamId: string 
 
   const card = await prisma.bingoCard.create({
     data: {
-      teamId: params.teamId,
+      teamId,
       label: label.trim(),
       rows: r,
       cols: c,

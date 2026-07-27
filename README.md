@@ -56,7 +56,7 @@ Rendez vos réunions d'équipe hebdomadaires infiniment plus fun avec des grille
 
 | Couche | Technologie |
 | -------- | ------------- |
-| Framework | [Next.js 14](https://nextjs.org/) (App Router) |
+| Framework | [Next.js 16](https://nextjs.org/) (App Router) |
 | Langage | TypeScript |
 | Styles | [Tailwind CSS](https://tailwindcss.com/) |
 | Animations | [Framer Motion](https://www.framer.com/motion/) + [react-confetti](https://www.npmjs.com/package/react-confetti) |
