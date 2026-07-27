@@ -1,0 +1,74 @@
+{
+  "name": "markit",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "predev": "node scripts/check-node.mjs",
+    "dev": "node server.js",
+    "prebuild": "node scripts/check-node.mjs",
+    "build": "next build",
+    "prestart": "node scripts/check-node.mjs",
+    "start": "NODE_ENV=production node server.js",
+    "lint": "next lint",
+    "lint:md": "markdownlint-cli2",
+    "typecheck": "tsc --noEmit",
+    "audit:ci": "npm audit --audit-level=high --omit=dev",
+    "ci": "node scripts/ci.mjs",
+    "ci:full": "node scripts/ci.mjs --with-audit",
+    "check": "npm run ci",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "prepare": "husky",
+    "release": "semantic-release"
+  },
+  "lint-staged": {
+    "*.{js,jsx,mjs,ts,tsx}": "eslint --fix",
+    "*.md": "markdownlint-cli2 --fix"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.7.2",
+    "@prisma/client": "^5.22.0",
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^3.0.3",
+    "framer-motion": "^11.11.17",
+    "next": "^14.2.18",
+    "next-auth": "^4.24.10",
+    "pino": "^10.3.1",
+    "react": "^18.3.1",
+    "react-confetti": "^6.1.0",
+    "react-dom": "^18.3.1",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.1",
+    "@commitlint/config-conventional": "^21.0.2",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/git": "^11.0.1",
+    "@semantic-release/github": "^12.0.9",
+    "@types/node": "^24.13.3",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.18",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.2.0",
+    "markdownlint-cli2": "^0.23.1",
+    "postcss": "^8.4.49",
+    "prisma": "^5.22.0",
+    "semantic-release": "^25.0.8",
+    "tailwindcss": "^3.4.15",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.6.3"
+  }
+}
