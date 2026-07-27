@@ -4,16 +4,20 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getCardIfMember } from "@/lib/authz";
 
-export async function GET(_req: Request, { params }: { params: { cardId: string } }) {
+type RouteContext = { params: Promise<{ cardId: string }> };
+
+export async function GET(_req: Request, { params }: RouteContext) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
+  const { cardId } = await params;
+
   // Vérifie que l'utilisateur est membre de l'équipe propriétaire
-  const access = await getCardIfMember(session.user.id, params.cardId);
+  const access = await getCardIfMember(session.user.id, cardId);
   if (!access) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   const card = await prisma.bingoCard.findUnique({
-    where: { id: params.cardId },
+    where: { id: cardId },
     include: {
       cells: {
         include: {
@@ -35,11 +39,13 @@ export async function GET(_req: Request, { params }: { params: { cardId: string 
   return NextResponse.json(card);
 }
 
-export async function PATCH(req: Request, { params }: { params: { cardId: string } }) {
+export async function PATCH(req: Request, { params }: RouteContext) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const access = await getCardIfMember(session.user.id, params.cardId);
+  const { cardId } = await params;
+
+  const access = await getCardIfMember(session.user.id, cardId);
   if (!access) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   const body = await req.json();
@@ -48,7 +54,7 @@ export async function PATCH(req: Request, { params }: { params: { cardId: string
   }
 
   const card = await prisma.bingoCard.update({
-    where: { id: params.cardId },
+    where: { id: cardId },
     data: {
       isActive: body.isActive,
       playedAt: body.isActive ? new Date() : undefined,

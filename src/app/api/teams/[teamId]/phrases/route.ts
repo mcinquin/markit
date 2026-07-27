@@ -7,17 +7,21 @@ import { getTeamMembership } from "@/lib/authz";
 const MAX_PHRASE_LENGTH = 200;
 const MAX_EMOJI_LENGTH = 4;
 
-export async function GET(_req: Request, { params }: { params: { teamId: string } }) {
+type RouteContext = { params: Promise<{ teamId: string }> };
+
+export async function GET(_req: Request, { params }: RouteContext) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const membership = await getTeamMembership(session.user.id, params.teamId);
+  const { teamId } = await params;
+
+  const membership = await getTeamMembership(session.user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   const [defaults, custom] = await Promise.all([
     prisma.phrase.findMany({ where: { isDefault: true }, orderBy: { text: "asc" } }),
     prisma.phrase.findMany({
-      where: { teamId: params.teamId, isDefault: false },
+      where: { teamId, isDefault: false },
       orderBy: { createdAt: "desc" },
     }),
   ]);
@@ -25,11 +29,13 @@ export async function GET(_req: Request, { params }: { params: { teamId: string 
   return NextResponse.json({ defaults, custom });
 }
 
-export async function POST(req: Request, { params }: { params: { teamId: string } }) {
+export async function POST(req: Request, { params }: RouteContext) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const membership = await getTeamMembership(session.user.id, params.teamId);
+  const { teamId } = await params;
+
+  const membership = await getTeamMembership(session.user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   const body = await req.json();
@@ -45,17 +51,19 @@ export async function POST(req: Request, { params }: { params: { teamId: string 
   }
 
   const phrase = await prisma.phrase.create({
-    data: { text, emoji: emoji || null, teamId: params.teamId },
+    data: { text, emoji: emoji || null, teamId },
   });
 
   return NextResponse.json(phrase, { status: 201 });
 }
 
-export async function DELETE(req: Request, { params }: { params: { teamId: string } }) {
+export async function DELETE(req: Request, { params }: RouteContext) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const membership = await getTeamMembership(session.user.id, params.teamId);
+  const { teamId } = await params;
+
+  const membership = await getTeamMembership(session.user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   const body = await req.json();
@@ -67,7 +75,7 @@ export async function DELETE(req: Request, { params }: { params: { teamId: strin
   const phrase = await prisma.phrase.findUnique({ where: { id: phraseId } });
 
   // Vérifie que la phrase appartient bien à cette équipe et n'est pas une phrase globale
-  if (!phrase || phrase.isDefault || phrase.teamId !== params.teamId) {
+  if (!phrase || phrase.isDefault || phrase.teamId !== teamId) {
     return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   }
 
