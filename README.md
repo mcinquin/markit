@@ -176,9 +176,12 @@ cp .env.example .env
 
 ```env
 DATABASE_URL="postgresql://markit:markit_password@localhost:5432/markit"
+PORT=3000
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="<générer avec : openssl rand -base64 32>"
 ```
+
+Si le port **3000** est déjà pris (autre app locale), change `PORT` et `NEXTAUTH_URL` ensemble, par ex. `PORT=3001` et `NEXTAUTH_URL="http://localhost:3001"`.
 
 ```bash
 # 4. Démarrer la base de données PostgreSQL
@@ -407,7 +410,8 @@ Le fichier `apache/markit.conf` configure :
 | `POSTGRES_DB` | production | Nom de la base (défaut : `markit`) |
 | `POSTGRES_DB_PASSWORD` | **oui** | Mot de passe PostgreSQL (`openssl rand -base64 32` OK — encodé au démarrage Docker) |
 | `DATABASE_URL` | optionnel | URL complète ; en prod Docker, laisser vide (construite par l'entrypoint). En dev local, URL vers `localhost` |
-| `NEXTAUTH_URL` | **oui** | URL publique du site (`https://...` en prod) |
+| `PORT` | optionnel | Port HTTP (défaut `3000`). En dev et Docker local : adapter `NEXTAUTH_URL` en conséquence |
+| `NEXTAUTH_URL` | **oui** | URL publique du site (`https://...` en prod, `http://localhost:<PORT>` en dev) |
 | `NEXTAUTH_SECRET` | **oui** | Clé de signature JWT — générer avec `openssl rand -base64 32` |
 
 ---
