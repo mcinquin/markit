@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/mcinquin/markit/compare/v1.1.1...v1.2.0) (2026-07-28)
+
+
+### Features
+
+* **auth:** change admin auth and add user password management ([283474a](https://github.com/mcinquin/markit/commit/283474ad5b68f33995e58836b787d71a69dd6eac))
+
 ## [1.1.1](https://github.com/mcinquin/markit/compare/v1.1.0...v1.1.1) (2026-07-28)
 
 
