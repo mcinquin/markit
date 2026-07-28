@@ -116,7 +116,7 @@ markit/
 │   └── markit.conf           # Configuration VirtualHost Apache
 ├── prisma/
 │   ├── schema.prisma          # Schéma de la base de données
-│   └── seed.ts                # Données initiales (35 phrases par défaut)
+│   └── seed.mjs               # Données initiales (35 phrases par défaut)
 ├── src/
 │   ├── app/
 │   │   ├── api/

@@ -37,7 +37,10 @@ else
 fi
 
 echo "[markit] Seed (phrases + admin si configuré)…"
-./node_modules/.bin/prisma db seed || echo "[markit] Seed ignoré ou déjà appliqué"
+if ! ./node_modules/.bin/prisma db seed; then
+  echo "[markit] ERREUR: le seed a échoué (vérifiez ADMIN_EMAIL / ADMIN_PASSWORD)" >&2
+  exit 1
+fi
 
 echo "[markit] Lancement du serveur…"
 exec node server.js
