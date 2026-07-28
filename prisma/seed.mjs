@@ -58,7 +58,7 @@ async function seedPhrases() {
 }
 
 async function seedAdmin() {
-  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase().trim();
   const adminPassword = process.env.ADMIN_PASSWORD;
   const adminName = process.env.ADMIN_NAME || "Admin";
 
@@ -87,7 +87,7 @@ async function seedAdmin() {
   await prisma.user.create({
     data: {
       name: adminName,
-      email: adminEmail.toLowerCase().trim(),
+      email: adminEmail,
       password: hashedPassword,
       isAdmin: true,
       mustChangePassword: true,

@@ -25,22 +25,27 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
-        });
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email.toLowerCase().trim() },
+          });
 
-        if (!user || !user.password) return null;
+          if (!user || !user.password) return null;
 
-        const passwordMatch = await compare(credentials.password, user.password);
-        if (!passwordMatch) return null;
+          const passwordMatch = await compare(credentials.password, user.password);
+          if (!passwordMatch) return null;
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          mustChangePassword: user.mustChangePassword,
-        };
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            mustChangePassword: user.mustChangePassword,
+          };
+        } catch (error) {
+          console.error("[auth] Échec authorize (schéma BDD à jour ? npm run db:push) :", error);
+          return null;
+        }
       },
     }),
   ],
