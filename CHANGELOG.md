@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/mcinquin/markit/compare/v1.1.0...v1.1.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **node:** remove node default port in Dockerfile ([1733cb9](https://github.com/mcinquin/markit/commit/1733cb9b5f187803912226613161d720938adaf3))
+
 # [1.1.0](https://github.com/mcinquin/markit/compare/v1.0.1...v1.1.0) (2026-07-28)
 
 
