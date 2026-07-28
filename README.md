@@ -405,8 +405,8 @@ Le fichier `apache/markit.conf` configure :
 | --- | --- | --- |
 | `POSTGRES_USER` | production | Utilisateur PostgreSQL (défaut : `markit`) |
 | `POSTGRES_DB` | production | Nom de la base (défaut : `markit`) |
-| `POSTGRES_DB_PASSWORD` | **oui** | Mot de passe PostgreSQL |
-| `DATABASE_URL` | dev local | URL complète (remplace les 3 variables Postgres) |
+| `POSTGRES_DB_PASSWORD` | **oui** | Mot de passe PostgreSQL (`openssl rand -base64 32` OK — encodé au démarrage Docker) |
+| `DATABASE_URL` | optionnel | URL complète ; en prod Docker, laisser vide (construite par l'entrypoint). En dev local, URL vers `localhost` |
 | `NEXTAUTH_URL` | **oui** | URL publique du site (`https://...` en prod) |
 | `NEXTAUTH_SECRET` | **oui** | Clé de signature JWT — générer avec `openssl rand -base64 32` |
 

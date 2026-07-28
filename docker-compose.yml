@@ -30,7 +30,14 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     environment:
-      DATABASE_URL: "postgresql://${POSTGRES_USER:-markit}:${POSTGRES_DB_PASSWORD}@postgres:5432/${POSTGRES_DB:-markit}"
+      # DATABASE_URL est construite au démarrage (entrypoint) avec encodage URL du mot de passe.
+      # Tu peux aussi définir DATABASE_URL explicitement dans .env pour surcharger.
+      POSTGRES_USER: ${POSTGRES_USER:-markit}
+      POSTGRES_DB: ${POSTGRES_DB:-markit}
+      POSTGRES_DB_PASSWORD: ${POSTGRES_DB_PASSWORD}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      DATABASE_URL: ${DATABASE_URL:-}
       NEXTAUTH_URL: "${NEXTAUTH_URL}"
       NEXTAUTH_SECRET: "${NEXTAUTH_SECRET}"
       NEXTAUTH_TRUST_HOST: "1"
