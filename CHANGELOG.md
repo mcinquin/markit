@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/mcinquin/markit/compare/v1.0.1...v1.1.0) (2026-07-28)
+
+
+### Features
+
+* **node:** add variable for node port ([49bd0a7](https://github.com/mcinquin/markit/commit/49bd0a725e4e77355256090186e285eb8d78f491))
+
 ## [1.0.1](https://github.com/mcinquin/markit/compare/v1.0.0...v1.0.1) (2026-07-28)
 
 
