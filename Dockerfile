@@ -63,7 +63,7 @@ RUN rm -rf \
 
 USER markit
 
-EXPOSE 3000
+# Pas de EXPOSE fixe : le port est défini par PORT au runtime (défaut 3000).
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
   CMD node -e "const p=process.env.PORT||3000;fetch('http://127.0.0.1:'+p+'/').then((r)=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"
