@@ -31,24 +31,44 @@ export const authOptions: NextAuthOptions = {
 
         if (!user || !user.password) return null;
 
-        // bcrypt compare — résistant au timing attack
         const passwordMatch = await compare(credentials.password, user.password);
         if (!passwordMatch) return null;
 
-        return { id: user.id, email: user.email, name: user.name, image: user.image };
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          mustChangePassword: user.mustChangePassword,
+        };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        token.mustChangePassword = user.mustChangePassword ?? false;
       }
+
+      if (trigger === "update" && session) {
+        if (session.name !== undefined) {
+          token.name = session.name;
+        }
+        if (session.mustChangePassword !== undefined) {
+          token.mustChangePassword = session.mustChangePassword;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+        session.user.mustChangePassword = token.mustChangePassword === true;
+        if (token.name) {
+          session.user.name = token.name as string;
+        }
       }
       return session;
     },

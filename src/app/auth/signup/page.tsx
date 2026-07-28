@@ -44,7 +44,13 @@ function SignUpForm() {
     }
 
     await signIn("credentials", { email, password, redirect: false });
-    router.push("/dashboard");
+    const accountRes = await fetch("/api/account");
+    if (accountRes.ok) {
+      const account = await accountRes.json();
+      router.push(account.mustChangePassword ? "/account" : "/dashboard");
+    } else {
+      router.push("/dashboard");
+    }
   }
 
   return (

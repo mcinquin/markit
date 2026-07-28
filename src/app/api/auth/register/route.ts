@@ -1,19 +1,15 @@
 import { NextResponse } from "next/server";
-import { hash } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { hashPassword, validateNewPassword, validateUserName } from "@/lib/account";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_NAME_LENGTH = 100;
 const MAX_EMAIL_LENGTH = 254;
-const MIN_PASSWORD_LENGTH = 12;
-const MAX_PASSWORD_LENGTH = 128;
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { name, email, password, inviteToken } = body;
 
-    // Vérification du token d'invitation en premier
     if (!inviteToken || typeof inviteToken !== "string") {
       return NextResponse.json({ error: "Lien d'invitation requis" }, { status: 403 });
     }
@@ -32,13 +28,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Ce lien d'invitation a expiré" }, { status: 403 });
     }
 
-    // Validation des champs
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Tous les champs sont requis" }, { status: 400 });
     }
-    if (typeof name !== "string" || name.trim().length < 1 || name.trim().length > MAX_NAME_LENGTH) {
-      return NextResponse.json({ error: `Le prénom doit faire entre 1 et ${MAX_NAME_LENGTH} caractères` }, { status: 400 });
+
+    const nameResult = validateUserName(name);
+    if ("error" in nameResult) {
+      return NextResponse.json({ error: nameResult.error }, { status: 400 });
     }
+
     if (typeof email !== "string" || email.length > MAX_EMAIL_LENGTH) {
       return NextResponse.json({ error: "Email invalide" }, { status: 400 });
     }
@@ -47,14 +45,10 @@ export async function POST(req: Request) {
     if (!EMAIL_REGEX.test(normalizedEmail)) {
       return NextResponse.json({ error: "Format d'email invalide" }, { status: 400 });
     }
-    if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
-      return NextResponse.json(
-        { error: `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères` },
-        { status: 400 }
-      );
-    }
-    if (password.length > MAX_PASSWORD_LENGTH) {
-      return NextResponse.json({ error: "Mot de passe trop long" }, { status: 400 });
+
+    const passwordResult = validateNewPassword(password);
+    if ("error" in passwordResult) {
+      return NextResponse.json({ error: passwordResult.error }, { status: 400 });
     }
 
     const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -62,13 +56,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Impossible de créer ce compte" }, { status: 409 });
     }
 
-    const hashedPassword = await hash(password, 12);
+    const hashedPassword = await hashPassword(passwordResult.value);
 
-    // Transaction : créer l'utilisateur ET marquer le token comme utilisé atomiquement
     const user = await prisma.$transaction(async (tx) => {
       const newUser = await tx.user.create({
         data: {
-          name: name.trim(),
+          name: nameResult.value,
           email: normalizedEmail,
           password: hashedPassword,
         },

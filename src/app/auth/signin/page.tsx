@@ -28,7 +28,14 @@ export default function SignInPage() {
     if (result?.error) {
       setError("Email ou mot de passe incorrect");
     } else {
-      router.push("/dashboard");
+      const accountRes = await fetch("/api/account");
+      if (accountRes.ok) {
+        const account = await accountRes.json();
+        router.push(account.mustChangePassword ? "/account" : "/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
+      router.refresh();
     }
   }
 
