@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/mcinquin/markit/compare/v1.2.0...v1.2.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **auth:** fix multiple issues with auth ([787a8ac](https://github.com/mcinquin/markit/commit/787a8ac04a521a5439805710c1071b3fb071afd9))
+
 # [1.2.0](https://github.com/mcinquin/markit/compare/v1.1.1...v1.2.0) (2026-07-28)
 
 
