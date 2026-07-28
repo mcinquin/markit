@@ -3,6 +3,9 @@ import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+const MIN_ADMIN_PASSWORD_LENGTH = 12;
+const BCRYPT_ROUNDS = 12;
+
 const DEFAULT_PHRASES = [
   { text: "On va mettre en place un process", emoji: "📋" },
   { text: "Il faudrait un meeting pour ça", emoji: "📅" },
@@ -60,12 +63,12 @@ async function seedAdmin() {
   const adminName = process.env.ADMIN_NAME || "Admin";
 
   if (!adminEmail || !adminPassword) {
-    console.log("ℹ️  ADMIN_EMAIL / ADMIN_PASSWORD non définis — admin ignoré");
+    console.log("ℹ️  ADMIN_EMAIL / ADMIN_PASSWORD non définis dans .env — admin ignoré");
     return;
   }
 
-  if (adminPassword.length < 12) {
-    throw new Error("ADMIN_PASSWORD doit faire au moins 12 caractères");
+  if (adminPassword.length < MIN_ADMIN_PASSWORD_LENGTH) {
+    throw new Error(`ADMIN_PASSWORD doit faire au moins ${MIN_ADMIN_PASSWORD_LENGTH} caractères`);
   }
 
   const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
@@ -80,13 +83,14 @@ async function seedAdmin() {
     return;
   }
 
-  const hashedPassword = await hash(adminPassword, 12);
+  const hashedPassword = await hash(adminPassword, BCRYPT_ROUNDS);
   await prisma.user.create({
     data: {
       name: adminName,
       email: adminEmail.toLowerCase().trim(),
       password: hashedPassword,
       isAdmin: true,
+      mustChangePassword: true,
     },
   });
 

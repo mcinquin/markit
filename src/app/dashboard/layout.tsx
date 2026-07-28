@@ -1,11 +1,8 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
+import { requireAccountReady } from "@/lib/account-guard";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect("/auth/signin");
+  await requireAccountReady();
 
   return (
     <div className="min-h-screen">

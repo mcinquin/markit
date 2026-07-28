@@ -519,6 +519,9 @@ npm run db:migrate       # Créer + appliquer une migration
 npm run db:seed          # Charger les phrases par défaut
 npm run db:studio        # Interface graphique Prisma Studio
 
+# ── Compte utilisateur ─────────────────────────────────────────
+# Page /account : prénom + changement de mot de passe (tous les utilisateurs)
+
 # ── Docker ─────────────────────────────────────────────────────
 docker compose up -d              # Démarrer tous les services
 docker compose up -d --build      # Rebuild + démarrer
