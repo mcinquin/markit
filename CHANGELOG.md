@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/mcinquin/markit/compare/v1.0.0...v1.0.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **postgres:** fix issue with postgres password ([72c81e5](https://github.com/mcinquin/markit/commit/72c81e595bfdb3fe30b50192912c5854f3397566))
+
 # 1.0.0 (2026-07-27)
 
 
