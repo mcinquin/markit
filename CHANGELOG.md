@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/mcinquin/markit/compare/v1.2.1...v1.3.0) (2026-07-30)
+
+
+### Features
+
+* **delete:** add deletion for team and card ([bece365](https://github.com/mcinquin/markit/commit/bece36508ae578ceba66f4c1b7a95c71fa6fba6d))
+
 ## [1.2.1](https://github.com/mcinquin/markit/compare/v1.2.0...v1.2.1) (2026-07-28)
 
 
