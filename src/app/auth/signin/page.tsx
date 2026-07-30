@@ -40,21 +40,22 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4">
-      <div className="card w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🎰</div>
-          <h1 className="text-4xl font-display text-bingo-purple">MarkIt</h1>
-          <p className="text-gray-500 mt-1">Bon retour parmi nous !</p>
+    <main className="flex min-h-screen items-center justify-center px-4 py-12">
+      <div className="surface w-full max-w-md -rotate-1">
+        <div className="mb-8">
+          <Link href="/" className="font-display text-3xl font-bold text-ink">
+            MarkIt<span className="text-accent">.</span>
+          </Link>
+          <p className="mt-2 text-ink-faint">Reconnecte-toi — la grille t&apos;attend</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-gray-600 mb-1">Email</label>
+            <label className="mb-1 block text-sm font-semibold text-ink-muted">Email</label>
             <input
               type="email"
               className="input"
-              placeholder="ton@email.com"
+              placeholder="toi@entreprise.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -62,11 +63,11 @@ export default function SignInPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-600 mb-1">Mot de passe</label>
+            <label className="mb-1 block text-sm font-semibold text-ink-muted">Mot de passe</label>
             <input
               type="password"
               className="input"
-              placeholder="••••••••"
+              placeholder="••••••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -74,27 +75,24 @@ export default function SignInPage() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border-2 border-red-200 text-red-600 rounded-2xl px-4 py-3 text-sm font-semibold">
-              ❌ {error}
+            <div className="rounded-sm border border-red-200 bg-danger-soft px-3 py-2 text-sm font-semibold text-danger shadow-[1px_2px_0_rgba(220,38,38,0.15)]">
+              {error}
             </div>
           )}
 
           <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? "Connexion..." : "Se connecter 🚀"}
+            {loading ? "Connexion…" : "C'est parti"}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-400 text-xs">
-            L&apos;inscription se fait uniquement sur invitation.
-          </p>
-        </div>
-
-        <div className="mt-4 text-center">
-          <Link href="/" className="text-gray-400 text-sm hover:text-gray-600">
-            ← Retour à l&apos;accueil
+        <p className="mt-6 text-center text-xs text-ink-faint">
+          L&apos;inscription se fait uniquement sur invitation.
+        </p>
+        <p className="mt-3 text-center">
+          <Link href="/" className="text-sm text-ink-faint hover:text-accent">
+            Retour à l&apos;accueil
           </Link>
-        </div>
+        </p>
       </div>
     </main>
   );

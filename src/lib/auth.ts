@@ -53,7 +53,13 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        token.sub = user.id;
         token.mustChangePassword = user.mustChangePassword ?? false;
+      }
+
+      // Credentials + JWT : toujours exposer un id stable (sub en secours)
+      if (!token.id && token.sub) {
+        token.id = token.sub;
       }
 
       if (trigger === "update" && session) {
@@ -69,7 +75,10 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string;
+        const userId = (token.id ?? token.sub) as string | undefined;
+        if (userId) {
+          session.user.id = userId;
+        }
         session.user.mustChangePassword = token.mustChangePassword === true;
         if (token.name) {
           session.user.name = token.name as string;

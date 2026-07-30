@@ -1,6 +1,6 @@
 import { getAccountProfile } from "@/lib/account";
 import { requireSession } from "@/lib/account-guard";
-import { Navbar } from "@/components/Navbar";
+import { Navbar } from "@/components/navbar/navbar";
 
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
@@ -9,7 +9,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
   return (
     <div className="min-h-screen">
       <Navbar minimal={profile?.mustChangePassword === true} />
-      <main className="max-w-6xl mx-auto px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
     </div>
   );
 }

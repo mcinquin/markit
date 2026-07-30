@@ -1,21 +1,19 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { getTeamMembership } from "@/lib/authz";
-
-const MAX_PHRASE_LENGTH = 200;
-const MAX_EMOJI_LENGTH = 4;
+import { createPhraseSchema, deletePhraseSchema } from "@/lib/schemas/phrase";
+import { parseJsonBody } from "@/lib/schemas/parse";
 
 type RouteContext = { params: Promise<{ teamId: string }> };
 
 export async function GET(_req: Request, { params }: RouteContext) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const auth = await requireApiAccountReady();
+  if (!auth.ok) return auth.response;
 
   const { teamId } = await params;
 
-  const membership = await getTeamMembership(session.user.id, teamId);
+  const membership = await getTeamMembership(auth.session.user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   const [defaults, custom] = await Promise.all([
@@ -30,26 +28,18 @@ export async function GET(_req: Request, { params }: RouteContext) {
 }
 
 export async function POST(req: Request, { params }: RouteContext) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const auth = await requireApiAccountReady();
+  if (!auth.ok) return auth.response;
 
   const { teamId } = await params;
 
-  const membership = await getTeamMembership(session.user.id, teamId);
+  const membership = await getTeamMembership(auth.session.user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  const body = await req.json();
-  const text = typeof body.text === "string" ? body.text.trim() : "";
-  const emoji = typeof body.emoji === "string" ? body.emoji.trim() : "";
+  const parsed = await parseJsonBody(req, createPhraseSchema);
+  if (!parsed.ok) return parsed.response;
 
-  if (!text) return NextResponse.json({ error: "Texte requis" }, { status: 400 });
-  if (text.length > MAX_PHRASE_LENGTH) {
-    return NextResponse.json({ error: `Texte trop long (max ${MAX_PHRASE_LENGTH} caractères)` }, { status: 400 });
-  }
-  if (emoji && emoji.length > MAX_EMOJI_LENGTH) {
-    return NextResponse.json({ error: "Emoji invalide" }, { status: 400 });
-  }
-
+  const { text, emoji } = parsed.data;
   const phrase = await prisma.phrase.create({
     data: { text, emoji: emoji || null, teamId },
   });
@@ -58,27 +48,23 @@ export async function POST(req: Request, { params }: RouteContext) {
 }
 
 export async function DELETE(req: Request, { params }: RouteContext) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const auth = await requireApiAccountReady();
+  if (!auth.ok) return auth.response;
 
   const { teamId } = await params;
 
-  const membership = await getTeamMembership(session.user.id, teamId);
+  const membership = await getTeamMembership(auth.session.user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  const body = await req.json();
-  const { phraseId } = body;
-  if (!phraseId || typeof phraseId !== "string") {
-    return NextResponse.json({ error: "ID requis" }, { status: 400 });
-  }
+  const parsed = await parseJsonBody(req, deletePhraseSchema);
+  if (!parsed.ok) return parsed.response;
 
-  const phrase = await prisma.phrase.findUnique({ where: { id: phraseId } });
+  const phrase = await prisma.phrase.findUnique({ where: { id: parsed.data.phraseId } });
 
-  // Vérifie que la phrase appartient bien à cette équipe et n'est pas une phrase globale
   if (!phrase || phrase.isDefault || phrase.teamId !== teamId) {
     return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   }
 
-  await prisma.phrase.delete({ where: { id: phraseId } });
+  await prisma.phrase.delete({ where: { id: parsed.data.phraseId } });
   return NextResponse.json({ ok: true });
 }

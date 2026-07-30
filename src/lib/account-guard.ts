@@ -15,12 +15,17 @@ export async function requireSession() {
 /**
  * Compte prêt à utiliser l'app (mot de passe définitif).
  * Redirige vers /account si première connexion en attente.
+ * Redirige vers /signin si le JWT ne correspond plus à un user (BDD reset, etc.).
  */
 export async function requireAccountReady() {
   const session = await requireSession();
   const profile = await getAccountProfile(session.user.id);
 
-  if (profile?.mustChangePassword) {
+  if (!profile) {
+    redirect("/auth/signin");
+  }
+
+  if (profile.mustChangePassword) {
     redirect("/account");
   }
 

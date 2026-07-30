@@ -46,6 +46,10 @@ const securityHeaders = [
 const nextConfig = {
   reactStrictMode: true,
   output: "standalone",
+  // Évite que Turbopack prenne un package-lock parent comme workspace root
+  turbopack: {
+    root: __dirname,
+  },
   logging: {
     fetches: { fullUrl: false },
   },

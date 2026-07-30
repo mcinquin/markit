@@ -115,14 +115,19 @@ markit/
 ├── apache/
 │   └── markit.conf           # Configuration VirtualHost Apache
 ├── prisma/
+│   ├── migrations/            # Migrations Prisma versionnées
 │   ├── schema.prisma          # Schéma de la base de données
 │   └── seed.mjs               # Données initiales (35 phrases par défaut)
 ├── src/
 │   ├── app/
 │   │   ├── api/
+│   │   │   ├── account/       # Profil / mot de passe
+│   │   │   ├── admin/         # Admin (users, invites)
 │   │   │   ├── auth/          # NextAuth + inscription email
 │   │   │   ├── cards/         # API grilles (récupérer, activer, cocher cases)
 │   │   │   └── teams/         # API équipes (CRUD, rejoindre, phrases)
+│   │   ├── account/           # Configuration du compte
+│   │   ├── admin/             # Console admin
 │   │   ├── auth/
 │   │   │   ├── signin/        # Page de connexion
 │   │   │   └── signup/        # Page d'inscription
@@ -133,11 +138,18 @@ markit/
 │   │   │       └── create/        # Créateur de grille
 │   │   └── play/[cardId]/     # Page de jeu en temps réel
 │   ├── components/
-│   │   └── Navbar.tsx
+│   │   ├── admin/
+│   │   ├── account-settings-form/
+│   │   ├── dashboard/
+│   │   ├── landing-hero/
+│   │   └── navbar/
 │   ├── lib/
+│   │   ├── account.ts         # Profil et validation mot de passe
+│   │   ├── api-auth.ts        # Guards session API
 │   │   ├── auth.ts            # Configuration NextAuth
 │   │   ├── bingo.ts           # Logique de détection bingo
 │   │   ├── prisma.ts          # Client Prisma singleton
+│   │   ├── schemas/           # Schémas Zod (entrées API)
 │   │   └── socket.ts          # Client Socket.io
 │   └── types/
 │       └── index.ts           # Types TypeScript partagés
@@ -187,10 +199,10 @@ Si le port **3000** est déjà pris (autre app locale), change `PORT` et `NEXTAU
 # 4. Démarrer la base de données PostgreSQL
 docker compose up postgres -d
 
-# 5. Créer les tables
-npm run db:push
+# 5. Appliquer les migrations (ou db:push en prototypage)
+npm run db:migrate:deploy
 
-# 6. Charger les 35 phrases par défaut
+# 6. Charger les 35 phrases par défaut (+ admin si ADMIN_* défini)
 npm run db:seed
 
 # 7. Lancer le serveur de développement
@@ -202,11 +214,20 @@ L'application est disponible sur **<http://localhost:3000>**.
 Avant de pousser, lancer les contrôles locaux :
 
 ```bash
-npm run ci        # Node, NEXTAUTH_SECRET, Prisma generate, lint, markdownlint, typecheck
+npm run ci        # Node, NEXTAUTH_SECRET, Prisma generate, lint, markdownlint, typecheck, tests
 npm run ci:full   # idem + audit npm (niveau high+, sans deps de dev)
 ```
 
 Husky exécute `npm run ci` au `pre-push` et [commitlint](https://commitlint.js.org/) au `commit-msg` (Conventional Commits).
+
+Au premier démarrage Docker, `scripts/docker-entrypoint.sh` applique `prisma migrate deploy`, lance le seed, puis démarre le serveur. Définis `ADMIN_EMAIL` / `ADMIN_PASSWORD` (≥ 12 caractères) pour créer le compte admin initial (`mustChangePassword` → redirection `/account`).
+
+### Checklist manuelle (après deploy)
+
+1. Connexion admin → `/account` si première connexion
+2. Dashboard → créer / rejoindre une équipe
+3. Créer une grille → jouer → cases temps réel
+4. Admin → générer une invitation → signup
 
 ---
 
@@ -433,11 +454,12 @@ CheckedCell   → case cochée (par quel utilisateur, quand)
 ### Commandes
 
 ```bash
-npm run db:push       # Synchroniser le schéma (dev)
-npm run db:migrate    # Créer une migration (dev)
-npm run db:seed       # Charger les phrases par défaut
-npm run db:studio     # Ouvrir Prisma Studio (interface graphique BDD)
-npm run db:generate   # Regénérer le client Prisma
+npm run db:migrate:deploy  # Appliquer les migrations (prod / Docker)
+npm run db:migrate         # Créer une migration (dev)
+npm run db:push            # Sync schéma sans migration (prototypage)
+npm run db:seed            # Charger les phrases + admin si configuré
+npm run db:studio          # Ouvrir Prisma Studio
+npm run db:generate        # Regénérer le client Prisma
 ```
 
 ### Sauvegarde
@@ -509,13 +531,15 @@ npm run build            # Build de production
 npm run lint             # Linter ESLint
 npm run lint:md          # Markdownlint
 npm run typecheck        # Vérification TypeScript
+npm run test             # Tests unitaires (bingo, account, authz)
 npm run ci               # Contrôles locaux (sans audit réseau)
 npm run ci:full          # Contrôles CI complets (+ audit npm)
 npm run release          # semantic-release (utilisé par le job CI)
 
 # ── Base de données ────────────────────────────────────────────
-npm run db:push          # Synchroniser schéma (dev, sans migration)
-npm run db:migrate       # Créer + appliquer une migration
+npm run db:migrate:deploy # Appliquer les migrations
+npm run db:migrate       # Créer + appliquer une migration (dev)
+npm run db:push          # Synchroniser schéma (prototypage)
 npm run db:seed          # Charger les phrases par défaut
 npm run db:studio        # Interface graphique Prisma Studio
 

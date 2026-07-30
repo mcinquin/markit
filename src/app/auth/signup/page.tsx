@@ -16,7 +16,6 @@ function SignUpForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Bloquer l'accès si pas de token dans l'URL
   useEffect(() => {
     if (!inviteToken) {
       router.replace("/auth/signin");
@@ -54,17 +53,21 @@ function SignUpForm() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4">
-      <div className="card w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🎉</div>
-          <h1 className="text-4xl font-display text-bingo-purple">Rejoins MarkIt !</h1>
-          <p className="text-gray-500 mt-1">Tu as été invité(e) à créer un compte</p>
+    <main className="flex min-h-screen items-center justify-center px-4 py-12">
+      <div className="surface w-full max-w-md rotate-1">
+        <div className="mb-8">
+          <p className="font-display text-3xl font-bold text-ink">
+            MarkIt<span className="text-accent">.</span>
+          </p>
+          <h1 className="mt-2 font-display text-xl font-semibold text-ink-muted">
+            Créer ton compte
+          </h1>
+          <p className="mt-1 text-sm text-ink-faint">Tu as reçu une invitation.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-gray-600 mb-1">Ton prénom</label>
+            <label className="mb-1 block text-sm font-semibold text-ink-muted">Prénom</label>
             <input
               type="text"
               className="input"
@@ -76,11 +79,11 @@ function SignUpForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-600 mb-1">Email</label>
+            <label className="mb-1 block text-sm font-semibold text-ink-muted">Email</label>
             <input
               type="email"
               className="input"
-              placeholder="ton@email.com"
+              placeholder="toi@entreprise.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -88,7 +91,7 @@ function SignUpForm() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-600 mb-1">Mot de passe</label>
+            <label className="mb-1 block text-sm font-semibold text-ink-muted">Mot de passe</label>
             <input
               type="password"
               className="input"
@@ -98,28 +101,26 @@ function SignUpForm() {
               required
               minLength={12}
             />
-            <p className="text-xs text-gray-400 mt-1">Minimum 12 caractères</p>
+            <p className="mt-1 text-xs text-ink-faint">Minimum 12 caractères</p>
           </div>
 
           {error && (
-            <div className="bg-red-50 border-2 border-red-200 text-red-600 rounded-2xl px-4 py-3 text-sm font-semibold">
-              ❌ {error}
+            <div className="rounded-sm border border-red-200 bg-danger-soft px-3 py-2 text-sm font-semibold text-danger shadow-[1px_2px_0_rgba(220,38,38,0.15)]">
+              {error}
             </div>
           )}
 
           <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? "Création du compte..." : "Créer mon compte 🎉"}
+            {loading ? "Création…" : "Créer mon compte"}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-500 text-sm">
-            Déjà un compte ?{" "}
-            <Link href="/auth/signin" className="text-bingo-purple font-bold hover:underline">
-              Se connecter
-            </Link>
-          </p>
-        </div>
+        <p className="mt-6 text-center text-sm text-ink-faint">
+          Déjà un compte ?{" "}
+          <Link href="/auth/signin" className="font-semibold text-accent hover:underline">
+            Se connecter
+          </Link>
+        </p>
       </div>
     </main>
   );

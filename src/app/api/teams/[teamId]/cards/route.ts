@@ -1,23 +1,20 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { shuffleArray, getCenterPosition } from "@/lib/bingo";
 import { getTeamMembership } from "@/lib/authz";
-
-const MAX_LABEL_LENGTH = 150;
-const MAX_GRID_SIZE = 10;
-const MIN_GRID_SIZE = 2;
+import { createCardSchema } from "@/lib/schemas/card";
+import { parseJsonBody } from "@/lib/schemas/parse";
 
 type RouteContext = { params: Promise<{ teamId: string }> };
 
 export async function GET(_req: Request, { params }: RouteContext) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const auth = await requireApiAccountReady();
+  if (!auth.ok) return auth.response;
 
   const { teamId } = await params;
 
-  const membership = await getTeamMembership(session.user.id, teamId);
+  const membership = await getTeamMembership(auth.session.user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   const cards = await prisma.bingoCard.findMany({
@@ -38,45 +35,30 @@ export async function GET(_req: Request, { params }: RouteContext) {
 }
 
 export async function POST(req: Request, { params }: RouteContext) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const auth = await requireApiAccountReady();
+  if (!auth.ok) return auth.response;
 
   const { teamId } = await params;
 
-  const membership = await getTeamMembership(session.user.id, teamId);
+  const membership = await getTeamMembership(auth.session.user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  const body = await req.json();
-  const { label, rows, cols, freeCenter, phraseIds } = body;
+  const parsed = await parseJsonBody(req, createCardSchema);
+  if (!parsed.ok) return parsed.response;
 
-  if (!label || typeof label !== "string" || !label.trim()) {
-    return NextResponse.json({ error: "Label requis" }, { status: 400 });
-  }
-  if (label.trim().length > MAX_LABEL_LENGTH) {
-    return NextResponse.json({ error: `Label trop long (max ${MAX_LABEL_LENGTH} caractères)` }, { status: 400 });
-  }
+  const { label, rows, cols, freeCenter, phraseIds } = parsed.data;
 
-  const r = parseInt(rows, 10);
-  const c = parseInt(cols, 10);
-  if (!r || !c || r < MIN_GRID_SIZE || c < MIN_GRID_SIZE || r > MAX_GRID_SIZE || c > MAX_GRID_SIZE) {
-    return NextResponse.json(
-      { error: `Dimensions invalides (${MIN_GRID_SIZE}–${MAX_GRID_SIZE})` },
-      { status: 400 }
-    );
-  }
-
-  const totalCells = r * c;
-  const centerPos = freeCenter ? getCenterPosition(r, c) : null;
+  const totalCells = rows * cols;
+  const centerPos = freeCenter ? getCenterPosition(rows, cols) : null;
   const neededPhrases = centerPos !== null ? totalCells - 1 : totalCells;
 
-  if (!Array.isArray(phraseIds) || phraseIds.length < neededPhrases) {
+  if (phraseIds.length < neededPhrases) {
     return NextResponse.json(
       { error: `Il faut au moins ${neededPhrases} phrases` },
       { status: 400 }
     );
   }
 
-  // Vérifie que les phraseIds fournis appartiennent bien à cette équipe ou sont des phrases globales
   const validPhrases = await prisma.phrase.findMany({
     where: {
       id: { in: phraseIds },
@@ -103,9 +85,9 @@ export async function POST(req: Request, { params }: RouteContext) {
   const card = await prisma.bingoCard.create({
     data: {
       teamId,
-      label: label.trim(),
-      rows: r,
-      cols: c,
+      label,
+      rows,
+      cols,
       freeCenter: centerPos !== null ? Boolean(freeCenter) : false,
       cells: { create: cellsData },
     },
@@ -124,7 +106,7 @@ export async function POST(req: Request, { params }: RouteContext) {
     const freeCell = card.cells.find((cell) => cell.position === centerPos);
     if (freeCell) {
       await prisma.checkedCell.create({
-        data: { cellId: freeCell.id, userId: session.user.id },
+        data: { cellId: freeCell.id, userId: auth.session.user.id },
       });
     }
   }

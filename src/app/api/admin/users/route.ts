@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireApiAdmin } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
-import { isAdmin } from "@/lib/admin";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  if (!(await isAdmin(session.user.id))) return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+  const auth = await requireApiAdmin();
+  if (!auth.ok) return auth.response;
 
   const users = await prisma.user.findMany({
     orderBy: { createdAt: "desc" },

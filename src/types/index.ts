@@ -1,3 +1,5 @@
+import type { AccountProfile } from "@/lib/account";
+
 export interface BingoCardWithCells {
   id: string;
   teamId: string;
@@ -6,9 +8,9 @@ export interface BingoCardWithCells {
   cols: number;
   freeCenter: boolean;
   isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  playedAt: Date | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  playedAt: Date | string | null;
   cells: CellWithPhrase[];
 }
 
@@ -29,7 +31,7 @@ export interface CheckedCellInfo {
   id: string;
   cellId: string;
   userId: string;
-  checkedAt: Date;
+  checkedAt: Date | string;
   user: {
     id: string;
     name: string | null;
@@ -42,20 +44,62 @@ export interface BingoPattern {
   positions: number[];
 }
 
+export type TeamMemberUser = {
+  id: string;
+  name: string | null;
+  email: string;
+  image?: string | null;
+};
+
+export type DashboardTeam = {
+  id: string;
+  name: string;
+  inviteCode: string;
+  members: { user: TeamMemberUser; role?: string }[];
+  _count: { cards: number };
+};
+
 export type TeamWithMembers = {
   id: string;
   name: string;
   inviteCode: string;
   members: {
-    user: {
-      id: string;
-      name: string | null;
-      email: string;
-      image: string | null;
-    };
+    user: TeamMemberUser;
     role: string;
   }[];
 };
+
+export type PhraseItem = {
+  id: string;
+  text: string;
+  emoji: string | null;
+  isDefault?: boolean;
+  teamId?: string | null;
+};
+
+export type AdminInvite = {
+  id: string;
+  token: string;
+  note: string | null;
+  expiresAt: string;
+  usedAt: string | null;
+  usedById: string | null;
+  createdBy: { name: string | null; email: string };
+};
+
+export type AdminUser = {
+  id: string;
+  name: string | null;
+  email: string;
+  isAdmin: boolean;
+  createdAt: string;
+  teams: {
+    role: string;
+    team: { id: string; name: string };
+  }[];
+};
+
+export type { AccountProfile };
 
 declare module "next-auth" {
   interface Session {

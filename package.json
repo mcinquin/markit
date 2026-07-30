@@ -15,6 +15,7 @@
     "lint": "eslint",
     "lint:md": "markdownlint-cli2",
     "typecheck": "tsc --noEmit",
+    "test": "jest",
     "audit:ci": "npm audit --audit-level=high --omit=dev",
     "ci": "node scripts/ci.mjs",
     "ci:full": "node scripts/ci.mjs --with-audit",
@@ -23,6 +24,7 @@
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "prepare": "husky",
     "release": "semantic-release"
@@ -44,7 +46,8 @@
     "react-confetti": "^6.1.0",
     "react-dom": "19.2.8",
     "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "zod": "^4.4.3"
   },
   "prisma": {
     "seed": "node prisma/seed.mjs"
@@ -55,6 +58,7 @@
     "@semantic-release/changelog": "^7.0.0",
     "@semantic-release/git": "^11.0.1",
     "@semantic-release/github": "^12.0.9",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.13.3",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19",
@@ -62,12 +66,14 @@
     "eslint": "^10.8.0",
     "eslint-config-next": "16.2.12",
     "husky": "^9.1.7",
+    "jest": "^30.4.2",
     "lint-staged": "^17.2.0",
     "markdownlint-cli2": "^0.23.1",
     "postcss": "8.5.23",
     "prisma": "^5.22.0",
     "semantic-release": "^25.0.8",
     "tailwindcss": "^3.4.15",
+    "ts-jest": "^29.4.12",
     "ts-node": "^10.9.2",
     "typescript": "~5.6.3"
   },

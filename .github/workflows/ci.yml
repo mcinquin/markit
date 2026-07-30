@@ -29,7 +29,7 @@ jobs:
 
       - run: npm ci
 
-      - name: Contrôles qualité (lint, typecheck, audit)
+      - name: Contrôles qualité (lint, typecheck, tests, audit)
         env:
           NEXTAUTH_SECRET: ci-test-nextauth-secret-32chars-minimum-ok
           DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
