@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" fill="none">
+  <rect
+    x="6"
+    y="8"
+    width="60"
+    height="56"
+    rx="10"
+    transform="rotate(-4 36 36)"
+    fill="#FFFEF8"
+    stroke="#0F172A"
+    stroke-width="4"
+  />
+  <text
+    x="16"
+    y="42"
+    fill="#0F172A"
+    font-family="system-ui, sans-serif"
+    font-size="22"
+    font-weight="700"
+  >
+    M
+  </text>
+  <path
+    d="M36 40 L42 46 L54 28"
+    stroke="#0F9F93"
+    stroke-width="4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="54" cy="52" r="5" fill="#F5C518" />
+</svg>

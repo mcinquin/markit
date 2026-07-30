@@ -3,6 +3,7 @@
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { MarkItBrand } from "@/components/markit-logo/markit-logo";
 
 type NavbarProps = {
   minimal?: boolean;
@@ -26,9 +27,9 @@ export function Navbar({ minimal = false }: NavbarProps) {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         <Link
           href={minimal ? "/account" : "/dashboard"}
-          className="font-display text-xl font-bold tracking-tight text-ink transition-transform hover:-rotate-1"
+          className="transition-transform hover:-rotate-1"
         >
-          MarkIt<span className="text-accent">.</span>
+          <MarkItBrand />
         </Link>
 
         <div className="flex items-center gap-3">

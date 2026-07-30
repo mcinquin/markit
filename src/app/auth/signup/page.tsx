@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { MarkItLogo } from "@/components/markit-logo/markit-logo";
 
 function SignUpForm() {
   const router = useRouter();
@@ -56,10 +57,8 @@ function SignUpForm() {
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="surface w-full max-w-md rotate-1">
         <div className="mb-8">
-          <p className="font-display text-3xl font-bold text-ink">
-            MarkIt<span className="text-accent">.</span>
-          </p>
-          <h1 className="mt-2 font-display text-xl font-semibold text-ink-muted">
+          <MarkItLogo className="h-16 w-auto max-w-full" />
+          <h1 className="mt-4 font-display text-xl font-semibold text-ink-muted">
             Créer ton compte
           </h1>
           <p className="mt-1 text-sm text-ink-faint">Tu as reçu une invitation.</p>
