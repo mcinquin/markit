@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { MarkItLogo } from "@/components/markit-logo/markit-logo";
 
 const DEMO_PHRASES = [
   "Quick win",
@@ -67,14 +68,8 @@ export function LandingHero() {
             ready ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
           }`}
         >
-          <p className="inline-block -rotate-1 rounded-sm border border-spark-deep/30 bg-spark px-3 py-1 font-display text-sm font-bold text-ink shadow-[2px_2px_0_rgba(15,23,42,0.1)]">
-            Meeting bingo
-          </p>
-          <p className="mt-5 font-display text-5xl font-bold tracking-tight text-ink sm:text-7xl">
-            MarkIt
-            <span className="text-accent">.</span>
-          </p>
-          <h1 className="mt-5 font-display text-2xl font-semibold leading-snug text-ink-muted sm:text-3xl">
+          <MarkItLogo className="h-24 w-auto max-w-[280px] sm:h-28" />
+          <h1 className="mt-6 font-display text-2xl font-semibold leading-snug text-ink-muted sm:text-3xl">
             Le bingo qui sauve les réunions interminables.
           </h1>
           <p className="mt-4 max-w-md text-base leading-relaxed text-ink-faint sm:text-lg">

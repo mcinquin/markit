@@ -20,6 +20,9 @@ const sourceSans = Source_Sans_3({
 export const metadata: Metadata = {
   title: "MarkIt – Meeting Bingo",
   description: "Bingo de réunion en temps réel pour vos équipes.",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

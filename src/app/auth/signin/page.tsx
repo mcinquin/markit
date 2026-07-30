@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { MarkItLogo } from "@/components/markit-logo/markit-logo";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -43,10 +44,10 @@ export default function SignInPage() {
     <main className="flex min-h-screen items-center justify-center px-4 py-12">
       <div className="surface w-full max-w-md -rotate-1">
         <div className="mb-8">
-          <Link href="/" className="font-display text-3xl font-bold text-ink">
-            MarkIt<span className="text-accent">.</span>
+          <Link href="/" className="inline-block">
+            <MarkItLogo className="h-16 w-auto max-w-full" />
           </Link>
-          <p className="mt-2 text-ink-faint">Reconnecte-toi — la grille t&apos;attend</p>
+          <p className="mt-4 text-ink-faint">Reconnecte-toi — la grille t&apos;attend</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
