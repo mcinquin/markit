@@ -2,14 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { DashboardTeam } from "@/types";
 
 type Props = {
   initialTeams: DashboardTeam[];
+  isAdmin?: boolean;
 };
 
-export function DashboardClient({ initialTeams }: Props) {
+export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
   const [teams, setTeams] = useState(initialTeams);
   const [showCreate, setShowCreate] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
@@ -17,7 +21,13 @@ export function DashboardClient({ initialTeams }: Props) {
   const [inviteCode, setInviteCode] = useState("");
   const [creating, setCreating] = useState(false);
   const [joining, setJoining] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
+
+  function canDeleteTeam(team: DashboardTeam) {
+    if (isAdmin) return true;
+    return Boolean(userId && team.createdById && team.createdById === userId);
+  }
 
   async function fetchTeams() {
     const res = await fetch("/api/teams");
@@ -61,6 +71,26 @@ export function DashboardClient({ initialTeams }: Props) {
     } else {
       const d = await res.json();
       setError(d.error);
+    }
+  }
+
+  async function deleteTeam(team: DashboardTeam) {
+    if (
+      !confirm(
+        `Supprimer l'équipe « ${team.name} » et toutes ses grilles ? Cette action est définitive.`
+      )
+    ) {
+      return;
+    }
+    setDeletingId(team.id);
+    setError("");
+    const res = await fetch(`/api/teams/${team.id}`, { method: "DELETE" });
+    setDeletingId(null);
+    if (res.ok) {
+      setTeams((prev) => prev.filter((t) => t.id !== team.id));
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setError(d.error || "Suppression impossible");
     }
   }
 
@@ -160,15 +190,21 @@ export function DashboardClient({ initialTeams }: Props) {
         )}
       </AnimatePresence>
 
+      {error && !showCreate && !showJoin && (
+        <p className="mb-4 text-sm font-semibold text-danger">{error}</p>
+      )}
+
       {teams.length === 0 ? (
         <div className="surface py-14 text-center">
-          <h2 className="font-display text-xl font-semibold text-ink-muted">Personne ici… pour l&apos;instant</h2>
+          <h2 className="font-display text-xl font-semibold text-ink-muted">
+            Personne ici… pour l&apos;instant
+          </h2>
           <p className="mt-1 text-ink-faint">Crée ou rejoins une équipe pour ouvrir le bal.</p>
         </div>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {teams.map((team, i) => (
-            <li key={team.id}>
+            <li key={team.id} className="relative">
               <Link
                 href={`/dashboard/teams/${team.id}`}
                 className={`surface-fun block ${i % 2 === 0 ? "hover:rotate-1" : "hover:-rotate-1"}`}
@@ -188,6 +224,20 @@ export function DashboardClient({ initialTeams }: Props) {
                   {team._count.cards} grille{team._count.cards !== 1 ? "s" : ""} →
                 </p>
               </Link>
+              {canDeleteTeam(team) && (
+                <button
+                  type="button"
+                  className="absolute right-3 top-3 rounded-sm px-2 py-1 text-xs font-bold text-danger hover:bg-danger/10"
+                  disabled={deletingId === team.id}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    void deleteTeam(team);
+                  }}
+                >
+                  {deletingId === team.id ? "…" : "Supprimer"}
+                </button>
+              )}
             </li>
           ))}
         </ul>

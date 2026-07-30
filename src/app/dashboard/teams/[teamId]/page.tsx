@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "../../utils/date";
 
@@ -13,6 +14,7 @@ interface Card {
   cols: number;
   isActive: boolean;
   createdAt: string;
+  createdById: string | null;
   playedAt: string | null;
   cells: { checked: { id: string }[] }[];
 }
@@ -21,26 +23,37 @@ interface Team {
   id: string;
   name: string;
   inviteCode: string;
+  createdById: string | null;
   members: { user: { id: string; name: string | null; email: string } }[];
 }
 
 export default function TeamPage() {
   const { teamId } = useParams<{ teamId: string }>();
   const router = useRouter();
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+
   const [team, setTeam] = useState<Team | null>(null);
   const [cards, setCards] = useState<Card[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [deletingTeam, setDeletingTeam] = useState(false);
+  const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   const fetchData = useCallback(async () => {
-    const [teamsRes, cardsRes] = await Promise.all([
+    const [teamsRes, cardsRes, adminRes] = await Promise.all([
       fetch("/api/teams"),
       fetch(`/api/teams/${teamId}/cards`),
+      fetch("/api/admin/me"),
     ]);
     const teamsData = await teamsRes.json();
     const cardsData = await cardsRes.json();
+    const adminData = adminRes.ok ? await adminRes.json() : { isAdmin: false };
     setTeam(teamsData.find((t: Team) => t.id === teamId) || null);
     setCards(cardsData);
+    setIsAdmin(adminData.isAdmin === true);
     setLoading(false);
   }, [teamId]);
 
@@ -48,11 +61,53 @@ export default function TeamPage() {
     fetchData();
   }, [fetchData]);
 
+  function canDelete(createdById: string | null | undefined) {
+    if (isAdmin) return true;
+    return Boolean(userId && createdById && createdById === userId);
+  }
+
   function copyInviteCode() {
     if (team) {
       navigator.clipboard.writeText(team.inviteCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  }
+
+  async function deleteTeam() {
+    if (!team) return;
+    if (
+      !confirm(
+        `Supprimer l'équipe « ${team.name} » et toutes ses grilles ? Cette action est définitive.`
+      )
+    ) {
+      return;
+    }
+    setDeletingTeam(true);
+    setError("");
+    const res = await fetch(`/api/teams/${team.id}`, { method: "DELETE" });
+    setDeletingTeam(false);
+    if (res.ok) {
+      router.push("/dashboard");
+      return;
+    }
+    const d = await res.json().catch(() => ({}));
+    setError(d.error || "Suppression impossible");
+  }
+
+  async function deleteCard(card: Card) {
+    if (!confirm(`Supprimer la grille « ${card.label} » ? Cette action est définitive.`)) {
+      return;
+    }
+    setDeletingCardId(card.id);
+    setError("");
+    const res = await fetch(`/api/cards/${card.id}`, { method: "DELETE" });
+    setDeletingCardId(null);
+    if (res.ok) {
+      setCards((prev) => prev.filter((c) => c.id !== card.id));
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setError(d.error || "Suppression impossible");
     }
   }
 
@@ -93,15 +148,27 @@ export default function TeamPage() {
           </p>
         </div>
 
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button type="button" onClick={copyInviteCode} className="btn-secondary py-2 text-sm">
             {copied ? "Copié" : "Code d'invitation"}
           </button>
           <Link href={`/dashboard/teams/${teamId}/create`} className="btn-primary">
             + Nouvelle grille
           </Link>
+          {team && canDelete(team.createdById) && (
+            <button
+              type="button"
+              onClick={() => void deleteTeam()}
+              disabled={deletingTeam}
+              className="btn-secondary py-2 text-sm text-danger hover:border-danger"
+            >
+              {deletingTeam ? "…" : "Supprimer l'équipe"}
+            </button>
+          )}
         </div>
       </div>
+
+      {error && <p className="mb-4 text-sm font-semibold text-danger">{error}</p>}
 
       {cards.length === 0 ? (
         <motion.div
@@ -126,12 +193,13 @@ export default function TeamPage() {
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
+                className={`surface-fun flex items-center gap-2 ${
+                  i % 2 === 0 ? "hover:rotate-1" : "hover:-rotate-1"
+                } ${card.isActive ? "border-accent/40 bg-accent-mist" : ""}`}
               >
                 <button
                   type="button"
-                  className={`surface-fun flex w-full items-center gap-4 text-left ${
-                    i % 2 === 0 ? "hover:rotate-1" : "hover:-rotate-1"
-                  } ${card.isActive ? "border-accent/40 bg-accent-mist" : ""}`}
+                  className="flex min-w-0 flex-1 items-center gap-4 text-left"
                   onClick={() => router.push(`/play/${card.id}`)}
                 >
                   <div
@@ -175,6 +243,16 @@ export default function TeamPage() {
                     <span className="text-xl font-bold text-accent">→</span>
                   </div>
                 </button>
+                {canDelete(card.createdById) && (
+                  <button
+                    type="button"
+                    className="shrink-0 rounded-sm px-2 py-1 text-xs font-bold text-danger hover:bg-danger/10"
+                    disabled={deletingCardId === card.id}
+                    onClick={() => void deleteCard(card)}
+                  >
+                    {deletingCardId === card.id ? "…" : "Supprimer"}
+                  </button>
+                )}
               </motion.div>
             );
           })}

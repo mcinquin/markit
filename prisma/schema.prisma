@@ -25,6 +25,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
   teams         TeamMember[]
+  teamsCreated  Team[]        @relation("TeamCreatedBy")
+  cardsCreated  BingoCard[]   @relation("CardCreatedBy")
   checkedCells  CheckedCell[]
   invitesSent   InviteToken[] @relation("InviteCreatedBy")
 }
@@ -69,12 +71,14 @@ model Team {
   id          String   @id @default(cuid())
   name        String
   inviteCode  String   @unique @default(cuid())
+  createdById String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  members TeamMember[]
-  cards   BingoCard[]
-  phrases Phrase[]
+  createdBy User?         @relation("TeamCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  members   TeamMember[]
+  cards     BingoCard[]
+  phrases   Phrase[]
 }
 
 model TeamMember {
@@ -109,19 +113,21 @@ model Phrase {
 }
 
 model BingoCard {
-  id        String    @id @default(cuid())
-  teamId    String
-  label     String
-  rows      Int       @default(5)
-  cols      Int       @default(5)
-  freeCenter Boolean  @default(true)
-  isActive  Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  playedAt  DateTime?
+  id          String    @id @default(cuid())
+  teamId      String
+  createdById String?
+  label       String
+  rows        Int       @default(5)
+  cols        Int       @default(5)
+  freeCenter  Boolean   @default(true)
+  isActive    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  playedAt    DateTime?
 
-  team  Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  cells Cell[]
+  team      Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  createdBy User? @relation("CardCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  cells     Cell[]
 }
 
 model Cell {

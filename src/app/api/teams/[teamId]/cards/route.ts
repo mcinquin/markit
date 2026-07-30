@@ -85,6 +85,7 @@ export async function POST(req: Request, { params }: RouteContext) {
   const card = await prisma.bingoCard.create({
     data: {
       teamId,
+      createdById: auth.session.user.id,
       label,
       rows,
       cols,

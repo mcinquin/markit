@@ -55,6 +55,7 @@ export type DashboardTeam = {
   id: string;
   name: string;
   inviteCode: string;
+  createdById?: string | null;
   members: { user: TeamMemberUser; role?: string }[];
   _count: { cards: number };
 };
