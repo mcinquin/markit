@@ -2,55 +2,80 @@ import type { Config } from "tailwindcss";
 
 const config: Config = {
   content: [
-    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
-        bingo: {
-          pink: "#FF6B9D",
-          purple: "#9B59B6",
-          blue: "#3498DB",
-          green: "#2ECC71",
-          yellow: "#F1C40F",
-          orange: "#E67E22",
-          red: "#E74C3C",
+        ink: {
+          DEFAULT: "#0F172A",
+          muted: "#334155",
+          faint: "#64748B",
+        },
+        paper: {
+          DEFAULT: "#F3F6F2",
+          warm: "#E8EFE8",
+          line: "#D2DDD4",
+        },
+        note: {
+          DEFAULT: "#FFFEF8",
+        },
+        accent: {
+          DEFAULT: "#0F9F93",
+          hover: "#0B7F76",
+          soft: "#C5F5EF",
+          mist: "#E8FAF7",
+        },
+        spark: {
+          DEFAULT: "#F5C518",
+          soft: "#FFF4C2",
+          deep: "#D4A017",
+        },
+        danger: {
+          DEFAULT: "#DC2626",
+          soft: "#FEE2E2",
         },
       },
       animation: {
-        "bounce-in": "bounceIn 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both",
-        "wiggle": "wiggle 0.3s ease-in-out",
-        "pop": "pop 0.3s ease-out",
-        "confetti-fall": "confettiFall 3s linear forwards",
+        "fade-up": "fadeUp 0.55s ease-out both",
+        "fade-in": "fadeIn 0.45s ease-out both",
+        pop: "pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        wobble: "wobble 0.45s ease-in-out",
+        "bounce-soft": "bounceSoft 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        "arcade-flash": "arcadeFlash 0.7s ease-in-out",
       },
       keyframes: {
-        bounceIn: {
-          "0%, 20%, 40%, 60%, 80%, 100%": { transform: "scale(1)" },
-          "10%": { transform: "scale(1.1)" },
-          "30%": { transform: "scale(0.95)" },
-          "50%": { transform: "scale(1.05)" },
-          "70%": { transform: "scale(0.98)" },
-          "90%": { transform: "scale(1.02)" },
+        fadeUp: {
+          "0%": { opacity: "0", transform: "translateY(14px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
         },
-        wiggle: {
-          "0%, 100%": { transform: "rotate(-3deg)" },
-          "50%": { transform: "rotate(3deg)" },
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
         },
         pop: {
-          "0%": { transform: "scale(0.8)", opacity: "0" },
-          "50%": { transform: "scale(1.2)" },
+          "0%": { transform: "scale(0.86)", opacity: "0" },
+          "60%": { transform: "scale(1.08)" },
           "100%": { transform: "scale(1)", opacity: "1" },
         },
-        confettiFall: {
-          "0%": { transform: "translateY(-100vh) rotate(0deg)", opacity: "1" },
-          "100%": { transform: "translateY(100vh) rotate(720deg)", opacity: "0" },
+        wobble: {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "25%": { transform: "rotate(-2.5deg)" },
+          "75%": { transform: "rotate(2.5deg)" },
+        },
+        bounceSoft: {
+          "0%": { transform: "scale(0.9) translateY(6px)", opacity: "0" },
+          "100%": { transform: "scale(1) translateY(0)", opacity: "1" },
+        },
+        arcadeFlash: {
+          "0%, 100%": { opacity: "1", filter: "brightness(1)" },
+          "50%": { opacity: "0.85", filter: "brightness(1.25)" },
         },
       },
       fontFamily: {
-        display: ["'Baloo 2'", "cursive"],
-        body: ["'Nunito'", "sans-serif"],
+        display: ["var(--font-display)", "system-ui", "sans-serif"],
+        body: ["var(--font-body)", "system-ui", "sans-serif"],
       },
     },
   },

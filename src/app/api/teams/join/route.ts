@@ -1,25 +1,26 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { joinTeamSchema } from "@/lib/schemas/team";
+import { parseJsonBody } from "@/lib/schemas/parse";
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const auth = await requireApiAccountReady();
+  if (!auth.ok) return auth.response;
 
-  const { inviteCode } = await req.json();
-  if (!inviteCode) return NextResponse.json({ error: "Code requis" }, { status: 400 });
+  const parsed = await parseJsonBody(req, joinTeamSchema);
+  if (!parsed.ok) return parsed.response;
 
-  const team = await prisma.team.findUnique({ where: { inviteCode } });
+  const team = await prisma.team.findUnique({ where: { inviteCode: parsed.data.inviteCode } });
   if (!team) return NextResponse.json({ error: "Code invalide" }, { status: 404 });
 
   const existing = await prisma.teamMember.findUnique({
-    where: { userId_teamId: { userId: session.user.id, teamId: team.id } },
+    where: { userId_teamId: { userId: auth.session.user.id, teamId: team.id } },
   });
   if (existing) return NextResponse.json({ error: "Tu es déjà membre de cette équipe" }, { status: 409 });
 
   await prisma.teamMember.create({
-    data: { userId: session.user.id, teamId: team.id, role: "MEMBER" },
+    data: { userId: auth.session.user.id, teamId: team.id, role: "MEMBER" },
   });
 
   return NextResponse.json({ teamId: team.id, teamName: team.name });

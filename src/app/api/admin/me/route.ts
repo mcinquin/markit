@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { requireApiSession } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ isAdmin: false });
+  const auth = await requireApiSession();
+  if (!auth.ok) return NextResponse.json({ isAdmin: false });
 
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: auth.session.user.id },
     select: { isAdmin: true },
   });
 

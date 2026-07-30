@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Navbar } from "@/components/Navbar";
+import { Navbar } from "@/components/navbar/navbar";
 import { requireAccountReady } from "@/lib/account-guard";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="max-w-4xl mx-auto px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-4xl px-4 py-8">{children}</main>
     </div>
   );
 }

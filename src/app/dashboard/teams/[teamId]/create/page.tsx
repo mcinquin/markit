@@ -118,24 +118,24 @@ export default function CreateCardPage() {
       <div className="mb-8">
         <Link
           href={`/dashboard/teams/${teamId}`}
-          className="text-sm text-bingo-purple font-bold hover:underline mb-2 inline-block"
+          className="text-sm text-accent font-bold hover:underline mb-2 inline-block"
         >
           ← Retour à l&apos;équipe
         </Link>
-        <h1 className="text-4xl font-display text-bingo-purple">Nouvelle grille</h1>
-        <p className="text-gray-500 mt-1">Configure ta grille de bingo pour cette semaine</p>
+        <h1 className="font-display text-4xl font-semibold text-ink">Nouvelle grille<span className="text-accent">.</span></h1>
+        <p className="mt-1 text-ink-faint">Compose ta grille post-it pour cette semaine</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Config column */}
         <div className="lg:col-span-1 space-y-6">
           {/* Card settings */}
-          <div className="card">
-            <h2 className="text-xl font-display text-bingo-purple mb-4">⚙️ Configuration</h2>
+          <div className="surface">
+            <h2 className="mb-4 font-display text-xl text-ink">Configuration</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-gray-600 mb-1">Nom de la grille</label>
+                <label className="block text-sm font-bold text-ink-muted mb-1">Nom de la grille</label>
                 <input
                   className="input"
                   value={label}
@@ -146,7 +146,7 @@ export default function CreateCardPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-bold text-gray-600 mb-1">Lignes</label>
+                  <label className="block text-sm font-bold text-ink-muted mb-1">Lignes</label>
                   <input
                     type="number"
                     className="input text-center"
@@ -157,7 +157,7 @@ export default function CreateCardPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-600 mb-1">Colonnes</label>
+                  <label className="block text-sm font-bold text-ink-muted mb-1">Colonnes</label>
                   <input
                     type="number"
                     className="input text-center"
@@ -174,21 +174,21 @@ export default function CreateCardPage() {
                   <div
                     className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
                       freeCenter
-                        ? "bg-bingo-purple border-bingo-purple"
-                        : "border-gray-300 group-hover:border-bingo-purple"
+                        ? "bg-accent border-accent"
+                        : "border-gray-300 group-hover:border-accent"
                     }`}
                     onClick={() => setFreeCenter(!freeCenter)}
                   >
                     {freeCenter && <span className="text-white text-xs">✓</span>}
                   </div>
-                  <span className="text-sm font-semibold text-gray-700">Case centrale FREE ⭐</span>
+                  <span className="text-sm font-semibold text-ink">Case centrale FREE ⭐</span>
                 </label>
               )}
             </div>
 
             {/* Grid preview */}
-            <div className="mt-4 p-3 bg-purple-50 rounded-2xl">
-              <p className="text-xs font-bold text-bingo-purple mb-2 text-center">Aperçu de la grille</p>
+            <div className="mt-4 p-3 bg-accent-mist rounded-md">
+              <p className="text-xs font-bold text-accent mb-2 text-center">Aperçu de la grille</p>
               <div
                 className="grid gap-1 mx-auto"
                 style={{
@@ -202,7 +202,7 @@ export default function CreateCardPage() {
                     className={`aspect-square rounded flex items-center justify-center text-xs font-bold ${
                       centerPos !== null && i === centerPos && freeCenter
                         ? "bg-yellow-300 text-yellow-800"
-                        : "bg-bingo-purple/20 text-bingo-purple"
+                        : "bg-accent/20 text-accent"
                     }`}
                   >
                     {centerPos !== null && i === centerPos && freeCenter ? "★" : ""}
@@ -213,19 +213,19 @@ export default function CreateCardPage() {
           </div>
 
           {/* Summary */}
-          <div className="card bg-gradient-to-br from-bingo-purple/5 to-bingo-pink/5 border-2 border-bingo-purple/20">
-            <h2 className="text-lg font-display text-bingo-purple mb-3">📊 Résumé</h2>
+          <div className="surface-spark">
+            <h2 className="mb-3 font-display text-lg text-ink">Résumé</h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">Taille</span>
-                <span className="font-bold text-gray-700">{rows} × {cols} = {totalCells} cases</span>
+                <span className="text-ink-faint">Taille</span>
+                <span className="font-bold text-ink">{rows} × {cols} = {totalCells} cases</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Phrases nécessaires</span>
-                <span className="font-bold text-gray-700">{needed}</span>
+                <span className="text-ink-faint">Phrases nécessaires</span>
+                <span className="font-bold text-ink">{needed}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Phrases sélectionnées</span>
+                <span className="text-ink-faint">Phrases sélectionnées</span>
                 <span className={`font-bold ${selectedIds.size >= needed ? "text-green-600" : "text-red-500"}`}>
                   {selectedIds.size} / {needed}
                 </span>
@@ -243,22 +243,22 @@ export default function CreateCardPage() {
               className="btn-primary w-full mt-4"
               disabled={creating || selectedIds.size < needed}
             >
-              {creating ? "Génération..." : `🎰 Générer la grille (${selectedIds.size}/${needed})`}
+              {creating ? "Génération..." : `Générer la grille (${selectedIds.size}/${needed})`}
             </button>
           </div>
         </div>
 
         {/* Phrase bank column */}
         <div className="lg:col-span-2">
-          <div className="card">
+          <div className="surface">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-display text-bingo-purple">💬 Banque de phrases</h2>
+              <h2 className="text-xl font-display text-accent">💬 Banque de phrases</h2>
               <div className="flex gap-2 text-sm">
-                <button onClick={selectAll} className="text-bingo-purple font-bold hover:underline">
+                <button onClick={selectAll} className="text-accent font-bold hover:underline">
                   Tout sélectionner
                 </button>
-                <span className="text-gray-300">|</span>
-                <button onClick={selectNone} className="text-gray-400 font-bold hover:underline">
+                <span className="text-paper-line">|</span>
+                <button onClick={selectNone} className="text-ink-faint font-bold hover:underline">
                   Tout désélectionner
                 </button>
               </div>
@@ -287,7 +287,7 @@ export default function CreateCardPage() {
             {/* Custom phrases */}
             {custom.length > 0 && (
               <div className="mb-4">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+                <p className="text-xs font-bold text-ink-faint uppercase tracking-wide mb-2">
                   Phrases personnalisées ({custom.length})
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -307,7 +307,7 @@ export default function CreateCardPage() {
 
             {/* Default phrases */}
             <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">
+              <p className="text-xs font-bold text-ink-faint uppercase tracking-wide mb-2">
                 Phrases classiques ({defaults.length})
               </p>
               <div className="flex flex-wrap gap-2">
@@ -339,13 +339,15 @@ function PhraseChip({
 }) {
   return (
     <motion.button
-      initial={{ opacity: 0, scale: 0.8 }}
+      type="button"
+      initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
+      whileHover={{ rotate: selected ? 0 : -2, y: -2 }}
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-2xl text-sm font-semibold transition-all duration-150 border-2 ${
+      className={`rounded-sm border px-3 py-1.5 text-sm font-semibold transition-colors shadow-[1px_2px_0_rgba(15,23,42,0.08)] ${
         selected
-          ? "bg-bingo-purple text-white border-bingo-purple shadow-md scale-105"
-          : "bg-white text-gray-600 border-gray-200 hover:border-bingo-purple/50 hover:text-bingo-purple"
+          ? "border-accent/40 bg-accent-soft text-accent-hover"
+          : "border-paper-line bg-note text-ink-muted hover:border-accent/40"
       }`}
     >
       {phrase.emoji && <span className="mr-1">{phrase.emoji}</span>}

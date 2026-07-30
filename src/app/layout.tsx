@@ -1,24 +1,31 @@
 import type { Metadata } from "next";
+import { Space_Grotesk, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const sourceSans = Source_Sans_3({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-body",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "MarkIt – Meeting Bingo",
-  description: "Rendez vos réunions d'équipe amusantes avec le bingo !",
+  description: "Bingo de réunion en temps réel pour vos équipes.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Nunito:wght@400;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="font-body bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 min-h-screen">
+    <html lang="fr" className={`${spaceGrotesk.variable} ${sourceSans.variable}`}>
+      <body className="font-body antialiased text-ink app-shell">
         <Providers>{children}</Providers>
       </body>
     </html>

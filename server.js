@@ -73,7 +73,8 @@ app.prepare().then(() => {
 
     socket.on("bingo", ({ cardId, pattern }) => {
       if (!cardId) return;
-      io.to(`card:${cardId}`).emit("bingo-achieved", { userName, pattern });
+      // Aux autres joueurs seulement — le local a déjà fêté au clic
+      socket.to(`card:${cardId}`).emit("bingo-achieved", { userName, pattern });
     });
 
     socket.on("disconnect", () => {

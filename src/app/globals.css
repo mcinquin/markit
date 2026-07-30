@@ -2,54 +2,130 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --ink: #0f172a;
+  --ink-muted: #334155;
+  --ink-faint: #64748b;
+  --paper: #f3f6f2;
+  --paper-warm: #e8efe8;
+  --paper-line: #d2ddd4;
+  --note: #fffef8;
+  --accent: #0f9f93;
+  --accent-hover: #0b7f76;
+  --accent-soft: #c5f5ef;
+  --accent-mist: #e8faf7;
+  --spark: #f5c518;
+  --spark-soft: #fff4c2;
+  --spark-deep: #d4a017;
+}
+
 @layer base {
   * {
     box-sizing: border-box;
   }
 
   body {
-    font-family: "Nunito", sans-serif;
+    color: var(--ink);
+    background-color: var(--paper);
   }
 
-  h1, h2, h3 {
-    font-family: "Fredoka One", cursive;
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), system-ui, sans-serif;
+    letter-spacing: -0.02em;
   }
 }
 
 @layer components {
   .btn-primary {
-    @apply bg-gradient-to-r from-bingo-pink to-bingo-purple text-white font-bold py-3 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+    @apply inline-flex items-center justify-center bg-accent text-white font-semibold py-2.5 px-5 rounded-sm
+      border border-accent-hover/30 shadow-[2px_3px_0_rgba(15,23,42,0.12)]
+      transition-all duration-200 hover:bg-accent-hover hover:-translate-y-0.5 hover:shadow-[2px_4px_0_rgba(15,23,42,0.14)]
+      active:translate-y-0 active:scale-[0.98] active:shadow-[1px_1px_0_rgba(15,23,42,0.12)]
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:bg-accent
+      disabled:hover:shadow-[2px_3px_0_rgba(15,23,42,0.12)];
   }
 
   .btn-secondary {
-    @apply bg-white text-bingo-purple border-2 border-bingo-purple font-bold py-3 px-6 rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 active:scale-95;
+    @apply inline-flex items-center justify-center bg-note text-ink border border-paper-line font-semibold py-2.5 px-5 rounded-sm
+      shadow-[2px_3px_0_rgba(15,23,42,0.08)]
+      transition-all duration-200 hover:border-accent hover:text-accent hover:-translate-y-0.5
+      active:translate-y-0;
   }
 
   .btn-danger {
-    @apply bg-gradient-to-r from-bingo-red to-bingo-orange text-white font-bold py-2 px-4 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 active:scale-95;
+    @apply inline-flex items-center justify-center bg-danger text-white font-semibold py-2 px-4 rounded-sm
+      shadow-[2px_3px_0_rgba(15,23,42,0.12)]
+      transition-all duration-200 hover:bg-red-700 hover:-translate-y-0.5 active:translate-y-0;
   }
 
-  .card {
-    @apply bg-white rounded-3xl shadow-xl p-6 border border-white/50;
+  .surface {
+    @apply relative overflow-hidden border border-paper-line bg-note p-5 rounded-sm
+      shadow-[2px_3px_0_rgba(15,23,42,0.08)] transition-transform duration-200;
+  }
+
+  .surface::after {
+    content: "";
+    @apply pointer-events-none absolute right-0 top-0 h-0 w-0
+      border-l-[16px] border-t-[16px] border-l-transparent border-t-black/[0.06];
+  }
+
+  .surface-fun {
+    @apply surface hover:-rotate-1 hover:border-accent/40 hover:shadow-[3px_4px_0_rgba(15,159,147,0.18)];
+  }
+
+  .surface-spark {
+    @apply relative overflow-hidden border border-spark-deep/30 bg-spark p-5 rounded-sm
+      shadow-[2px_3px_0_rgba(212,160,23,0.25)] text-ink;
+  }
+
+  .surface-spark::after {
+    content: "";
+    @apply pointer-events-none absolute right-0 top-0 h-0 w-0
+      border-l-[16px] border-t-[16px] border-l-transparent border-t-spark-deep/25;
   }
 
   .input {
-    @apply w-full px-4 py-3 rounded-2xl border-2 border-purple-200 focus:border-bingo-purple focus:ring-0 outline-none font-body text-gray-700 transition-colors placeholder:text-gray-400;
+    @apply w-full px-3.5 py-2.5 rounded-sm border border-paper-line bg-white
+      focus:border-accent focus:ring-1 focus:ring-accent outline-none
+      font-body text-ink transition-colors placeholder:text-ink-faint
+      shadow-[1px_1px_0_rgba(15,23,42,0.04)];
+  }
+
+  .app-shell {
+    @apply relative min-h-screen;
+    background-color: var(--paper);
+    background-image:
+      radial-gradient(ellipse 80% 50% at 8% -8%, rgba(15, 159, 147, 0.12), transparent 55%),
+      radial-gradient(ellipse 55% 40% at 92% 0%, rgba(245, 197, 24, 0.14), transparent 50%),
+      linear-gradient(var(--paper-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+    background-size: auto, auto, 40px 40px, 40px 40px;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-sm border border-paper-line bg-note px-2.5 py-1
+      text-xs font-bold text-ink-muted shadow-[1px_2px_0_rgba(15,23,42,0.06)];
+  }
+
+  .chip-accent {
+    @apply chip border-accent/30 bg-accent-soft text-accent-hover;
+  }
+
+  .chip-spark {
+    @apply chip border-spark-deep/25 bg-spark text-ink;
   }
 }
 
-/* Bingo cell checked animation */
 .cell-check-enter {
-  animation: cellCheck 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation: cellCheck 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
 @keyframes cellCheck {
   0% {
-    transform: scale(0.8) rotate(-5deg);
+    transform: scale(0.82) rotate(-4deg);
     opacity: 0.5;
-  }
-  60% {
-    transform: scale(1.15) rotate(3deg);
   }
   100% {
     transform: scale(1) rotate(0deg);
@@ -57,17 +133,20 @@
   }
 }
 
-/* Bingo line flash */
 .bingo-line {
-  animation: bingoLine 0.6s ease-in-out forwards;
+  animation: bingoLine 0.55s ease-in-out infinite;
 }
 
 @keyframes bingoLine {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.15);
+  }
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -75,6 +154,6 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #c4b5fd;
+  background: #94a3b8;
   border-radius: 4px;
 }

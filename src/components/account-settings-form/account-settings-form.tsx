@@ -4,13 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
-
-type AccountProfile = {
-  name: string | null;
-  email: string;
-  mustChangePassword: boolean;
-  isAdmin: boolean;
-};
+import type { AccountProfile } from "@/types";
 
 export function AccountSettingsForm() {
   const router = useRouter();
@@ -113,32 +107,35 @@ export function AccountSettingsForm() {
 
   if (loading) {
     return (
-      <div className="card text-center text-gray-500 font-semibold py-12">
+      <div className="surface mx-auto max-w-md -rotate-1 py-12 text-center text-ink-faint">
         Chargement…
       </div>
     );
   }
 
   return (
-    <div className="card w-full max-w-md mx-auto">
-      <div className="text-center mb-8">
-        <div className="text-5xl mb-3">{isSetup ? "👋" : "⚙️"}</div>
-        <h1 className="text-3xl font-display text-bingo-purple">
+    <div
+      className={`mx-auto w-full max-w-md ${
+        isSetup ? "surface-spark" : "surface -rotate-1"
+      }`}
+    >
+      <div className="mb-8">
+        <h1 className="font-display text-2xl font-semibold text-ink">
           {isSetup ? "Configure ton compte" : "Mon compte"}
         </h1>
-        <p className="text-gray-500 mt-1 text-sm">
+        <p className="mt-1 text-sm text-ink-faint">
           {isSetup
-            ? "Première connexion : choisis ton prénom et un nouveau mot de passe."
+            ? "Première connexion : prénom et nouveau mot de passe."
             : "Modifie ton prénom ou ton mot de passe."}
         </p>
         {session?.user?.email && (
-          <p className="text-gray-400 text-xs mt-2">{session.user.email}</p>
+          <p className="mt-2 text-xs text-ink-faint">{session.user.email}</p>
         )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-bold text-gray-600 mb-1">Prénom</label>
+          <label className="mb-1 block text-sm font-semibold text-ink-muted">Prénom</label>
           <input
             type="text"
             className="input"
@@ -151,7 +148,7 @@ export function AccountSettingsForm() {
 
         {!isSetup && (
           <div>
-            <label className="block text-sm font-bold text-gray-600 mb-1">
+            <label className="mb-1 block text-sm font-semibold text-ink-muted">
               Mot de passe actuel
             </label>
             <input
@@ -162,14 +159,14 @@ export function AccountSettingsForm() {
               onChange={(e) => setCurrentPassword(e.target.value)}
               autoComplete="current-password"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="mt-1 text-xs text-ink-faint">
               Requis uniquement si tu changes le mot de passe
             </p>
           </div>
         )}
 
         <div>
-          <label className="block text-sm font-bold text-gray-600 mb-1">
+          <label className="mb-1 block text-sm font-semibold text-ink-muted">
             {isSetup ? "Nouveau mot de passe" : "Nouveau mot de passe (optionnel)"}
           </label>
           <input
@@ -182,12 +179,12 @@ export function AccountSettingsForm() {
             minLength={12}
             autoComplete="new-password"
           />
-          <p className="text-xs text-gray-400 mt-1">Minimum 12 caractères</p>
+          <p className="mt-1 text-xs text-ink-faint">Minimum 12 caractères</p>
         </div>
 
         {(isSetup || newPassword) && (
           <div>
-            <label className="block text-sm font-bold text-gray-600 mb-1">
+            <label className="mb-1 block text-sm font-semibold text-ink-muted">
               Confirmer le mot de passe
             </label>
             <input
@@ -204,28 +201,28 @@ export function AccountSettingsForm() {
         )}
 
         {error && (
-          <div className="bg-red-50 border-2 border-red-200 text-red-600 rounded-2xl px-4 py-3 text-sm font-semibold">
-            ❌ {error}
+          <div className="rounded-sm border border-red-200 bg-danger-soft px-3 py-2 text-sm font-semibold text-danger shadow-[1px_2px_0_rgba(220,38,38,0.15)]">
+            {error}
           </div>
         )}
 
         {success && (
-          <div className="bg-green-50 border-2 border-green-200 text-green-700 rounded-2xl px-4 py-3 text-sm font-semibold">
-            ✅ {success}
+          <div className="rounded-sm border border-accent/30 bg-accent-soft px-3 py-2 text-sm font-semibold text-accent-hover shadow-[1px_2px_0_rgba(15,159,147,0.15)]">
+            {success}
           </div>
         )}
 
         <button type="submit" className="btn-primary w-full" disabled={saving}>
-          {saving ? "Enregistrement…" : isSetup ? "Terminer la configuration 🎉" : "Enregistrer"}
+          {saving ? "Enregistrement…" : isSetup ? "Terminer la configuration" : "Enregistrer"}
         </button>
       </form>
 
       {!isSetup && (
-        <div className="mt-6 text-center">
-          <Link href="/dashboard" className="text-gray-400 text-sm hover:text-gray-600">
-            ← Retour au tableau de bord
+        <p className="mt-6 text-center">
+          <Link href="/dashboard" className="text-sm text-ink-faint hover:text-accent">
+            Retour au tableau de bord
           </Link>
-        </div>
+        </p>
       )}
     </div>
   );
