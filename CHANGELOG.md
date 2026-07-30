@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/mcinquin/markit/compare/v1.3.0...v1.3.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **docker:** fix issue with database migration ([33d54a4](https://github.com/mcinquin/markit/commit/33d54a4c02c10ccd420df2388e232a1004c8323a))
+
 # [1.3.0](https://github.com/mcinquin/markit/compare/v1.2.1...v1.3.0) (2026-07-30)
 
 
