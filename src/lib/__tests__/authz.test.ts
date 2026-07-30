@@ -12,16 +12,31 @@ jest.mock("@/lib/prisma", () => ({
     phrase: {
       findUnique: jest.fn(),
     },
+    team: {
+      findUnique: jest.fn(),
+    },
+    user: {
+      findUnique: jest.fn(),
+    },
   },
 }));
 
 import { prisma } from "@/lib/prisma";
-import { getTeamMembership, getCardIfMember, getPhraseIfMember } from "@/lib/authz";
+import {
+  getTeamMembership,
+  getCardIfMember,
+  getPhraseIfMember,
+  canDeleteOwnedResource,
+  canDeleteTeam,
+  canDeleteCard,
+} from "@/lib/authz";
 
 const mockedPrisma = prisma as unknown as {
   teamMember: { findUnique: jest.Mock };
   bingoCard: { findUnique: jest.Mock };
   phrase: { findUnique: jest.Mock };
+  team: { findUnique: jest.Mock };
+  user: { findUnique: jest.Mock };
 };
 
 describe("getTeamMembership", () => {
@@ -45,6 +60,7 @@ describe("getCardIfMember", () => {
     mockedPrisma.bingoCard.findUnique.mockResolvedValue({
       id: "c1",
       teamId: "t1",
+      createdById: "u2",
       rows: 5,
       cols: 5,
       freeCenter: true,
@@ -58,6 +74,7 @@ describe("getCardIfMember", () => {
     const card = {
       id: "c1",
       teamId: "t1",
+      createdById: "u1",
       rows: 5,
       cols: 5,
       freeCenter: true,
@@ -88,5 +105,65 @@ describe("getPhraseIfMember", () => {
     });
     mockedPrisma.teamMember.findUnique.mockResolvedValue(null);
     expect(await getPhraseIfMember("u1", "p1")).toBeNull();
+  });
+});
+
+describe("canDeleteOwnedResource", () => {
+  it("autorise l'admin", () => {
+    expect(canDeleteOwnedResource("u1", "u2", true)).toBe(true);
+  });
+
+  it("autorise le créateur", () => {
+    expect(canDeleteOwnedResource("u1", "u1", false)).toBe(true);
+  });
+
+  it("refuse un non-créateur non-admin", () => {
+    expect(canDeleteOwnedResource("u1", "u2", false)).toBe(false);
+  });
+
+  it("refuse si pas de créateur et non-admin", () => {
+    expect(canDeleteOwnedResource("u1", null, false)).toBe(false);
+  });
+});
+
+describe("canDeleteTeam", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("retourne false si équipe absente", async () => {
+    mockedPrisma.team.findUnique.mockResolvedValue(null);
+    mockedPrisma.user.findUnique.mockResolvedValue({ isAdmin: false });
+    expect(await canDeleteTeam("u1", "t1")).toBe(false);
+  });
+
+  it("autorise le créateur", async () => {
+    mockedPrisma.team.findUnique.mockResolvedValue({ createdById: "u1" });
+    mockedPrisma.user.findUnique.mockResolvedValue({ isAdmin: false });
+    expect(await canDeleteTeam("u1", "t1")).toBe(true);
+  });
+
+  it("autorise l'admin sur une équipe d'autrui", async () => {
+    mockedPrisma.team.findUnique.mockResolvedValue({ createdById: "u2" });
+    mockedPrisma.user.findUnique.mockResolvedValue({ isAdmin: true });
+    expect(await canDeleteTeam("u1", "t1")).toBe(true);
+  });
+});
+
+describe("canDeleteCard", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("refuse un membre non créateur", async () => {
+    mockedPrisma.bingoCard.findUnique.mockResolvedValue({ createdById: "u2" });
+    mockedPrisma.user.findUnique.mockResolvedValue({ isAdmin: false });
+    expect(await canDeleteCard("u1", "c1")).toBe(false);
+  });
+
+  it("autorise le créateur de la grille", async () => {
+    mockedPrisma.bingoCard.findUnique.mockResolvedValue({ createdById: "u1" });
+    mockedPrisma.user.findUnique.mockResolvedValue({ isAdmin: false });
+    expect(await canDeleteCard("u1", "c1")).toBe(true);
   });
 });

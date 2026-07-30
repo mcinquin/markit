@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
-import { getCardIfMember } from "@/lib/authz";
+import { canDeleteCard, getCardIfMember } from "@/lib/authz";
+import { isAdmin } from "@/lib/admin";
 import { updateCardSchema } from "@/lib/schemas/card";
 import { parseJsonBody } from "@/lib/schemas/parse";
 
@@ -12,9 +13,15 @@ export async function GET(_req: Request, { params }: RouteContext) {
   if (!auth.ok) return auth.response;
 
   const { cardId } = await params;
+  const userId = auth.session.user.id;
 
-  const access = await getCardIfMember(auth.session.user.id, cardId);
-  if (!access) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  const [access, userIsAdmin] = await Promise.all([
+    getCardIfMember(userId, cardId),
+    isAdmin(userId),
+  ]);
+  if (!access && !userIsAdmin) {
+    return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  }
 
   const card = await prisma.bingoCard.findUnique({
     where: { id: cardId },
@@ -35,6 +42,8 @@ export async function GET(_req: Request, { params }: RouteContext) {
       },
     },
   });
+
+  if (!card) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   return NextResponse.json(card);
 }
@@ -60,4 +69,25 @@ export async function PATCH(req: Request, { params }: RouteContext) {
   });
 
   return NextResponse.json(card);
+}
+
+export async function DELETE(_req: Request, { params }: RouteContext) {
+  const auth = await requireApiAccountReady();
+  if (!auth.ok) return auth.response;
+
+  const { cardId } = await params;
+  const userId = auth.session.user.id;
+
+  const card = await prisma.bingoCard.findUnique({
+    where: { id: cardId },
+    select: { id: true, createdById: true },
+  });
+  if (!card) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+
+  if (!(await canDeleteCard(userId, cardId))) {
+    return NextResponse.json({ error: "Suppression non autorisée" }, { status: 403 });
+  }
+
+  await prisma.bingoCard.delete({ where: { id: cardId } });
+  return NextResponse.json({ ok: true });
 }

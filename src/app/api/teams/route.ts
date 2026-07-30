@@ -32,6 +32,7 @@ export async function POST(req: Request) {
   const team = await prisma.team.create({
     data: {
       name: parsed.data.name,
+      createdById: auth.session.user.id,
       members: {
         create: { userId: auth.session.user.id, role: "OWNER" },
       },
