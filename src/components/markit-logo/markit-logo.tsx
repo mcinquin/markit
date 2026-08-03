@@ -60,38 +60,26 @@ export function MarkItLogo({
   return (
     <svg
       className={className}
-      viewBox="0 0 300 128"
+      viewBox="0 0 228 128"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
       aria-label={title}
     >
       <title>{title}</title>
-      <g transform="rotate(-3 150 64)">
+      <g transform="rotate(-3 114 64)">
         <rect
           x="12"
-          y="16"
-          width="276"
-          height="96"
+          y="14"
+          width="204"
+          height="98"
           rx="16"
           fill="#FFFEF8"
           stroke="#0F172A"
           strokeWidth="5.5"
         />
-        {/* Éclaboussure citron */}
-        <path
-          d="M20 92c8 14 28 12 36-2"
-          stroke="#F5C518"
-          strokeWidth="10"
-          strokeLinecap="round"
-        />
-        <path
-          d="M28 98c4 6 14 5 18-1"
-          stroke="#F5C518"
-          strokeWidth="5"
-          strokeLinecap="round"
-          opacity="0.7"
-        />
+        {/* Soulignement citron centré */}
+        <path d="M94 99 H134" stroke="#F5C518" strokeWidth="3" strokeLinecap="round" />
         <text
           x="32"
           y="72"
@@ -104,14 +92,14 @@ export function MarkItLogo({
           MARK
         </text>
         <path
-          d="M214 30 L224 40 L244 16"
+          d="M160 34 L168 41 L184 26"
           stroke="#0F9F93"
-          strokeWidth="6"
+          strokeWidth="5.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         <text
-          x="214"
+          x="160"
           y="72"
           fill="#0F9F93"
           fontFamily="var(--font-display), system-ui, sans-serif"
@@ -122,8 +110,8 @@ export function MarkItLogo({
           IT
         </text>
         <text
-          x="150"
-          y="98"
+          x="114"
+          y="93"
           textAnchor="middle"
           fill="#0F9F93"
           fontFamily="var(--font-body), system-ui, sans-serif"
@@ -131,7 +119,7 @@ export function MarkItLogo({
           fontWeight="700"
           letterSpacing="3"
         >
-          • MEETING BINGO •
+          MEETING BINGO
         </text>
       </g>
     </svg>
