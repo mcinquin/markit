@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/mcinquin/markit/compare/v1.3.1...v1.4.0) (2026-08-03)
+
+
+### Features
+
+* **logo:** change logo ([39fcdf2](https://github.com/mcinquin/markit/commit/39fcdf2ac0c96476aa2340230b8485cfa6eca62e))
+
 ## [1.3.1](https://github.com/mcinquin/markit/compare/v1.3.0...v1.3.1) (2026-07-30)
 
 
