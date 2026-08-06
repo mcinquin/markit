@@ -1,6 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.mjs";
 
 :root {
   --ink: #0f172a;
@@ -68,11 +67,19 @@
   .surface::after {
     content: "";
     @apply pointer-events-none absolute right-0 top-0 h-0 w-0
-      border-l-[16px] border-t-[16px] border-l-transparent border-t-black/[0.06];
+      border-l-[16px] border-t-[16px] border-l-transparent border-t-black/6;
   }
 
   .surface-fun {
-    @apply surface hover:-rotate-1 hover:border-accent/40 hover:shadow-[3px_4px_0_rgba(15,159,147,0.18)];
+    @apply relative overflow-hidden border border-paper-line bg-note p-5 rounded-sm
+      shadow-[2px_3px_0_rgba(15,23,42,0.08)] transition-transform duration-200
+      hover:-rotate-1 hover:border-accent/40 hover:shadow-[3px_4px_0_rgba(15,159,147,0.18)];
+  }
+
+  .surface-fun::after {
+    content: "";
+    @apply pointer-events-none absolute right-0 top-0 h-0 w-0
+      border-l-[16px] border-t-[16px] border-l-transparent border-t-black/6;
   }
 
   .surface-spark {
@@ -110,11 +117,13 @@
   }
 
   .chip-accent {
-    @apply chip border-accent/30 bg-accent-soft text-accent-hover;
+    @apply inline-flex items-center rounded-sm border border-accent/30 bg-accent-soft px-2.5 py-1
+      text-xs font-bold text-accent-hover shadow-[1px_2px_0_rgba(15,23,42,0.06)];
   }
 
   .chip-spark {
-    @apply chip border-spark-deep/25 bg-spark text-ink;
+    @apply inline-flex items-center rounded-sm border border-spark-deep/25 bg-spark px-2.5 py-1
+      text-xs font-bold text-ink shadow-[1px_2px_0_rgba(15,23,42,0.06)];
   }
 }
 
