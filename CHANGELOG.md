@@ -1,3 +1,11 @@
+# [1.5.0](https://github.com/mcinquin/markit/compare/v1.4.0...v1.5.0) (2026-08-06)
+
+
+### Features
+
+* **deps:** bump prisma and tailwindcss version ([8937c60](https://github.com/mcinquin/markit/commit/8937c60ae3b0d528fda79ee822f91587da23638d))
+* **deps:** bump prisma and tailwindcss version ([c2d600d](https://github.com/mcinquin/markit/commit/c2d600d2e37cf52e6d9f85c1827619d8fc070be0))
+
 # [1.4.0](https://github.com/mcinquin/markit/compare/v1.3.1...v1.4.0) (2026-08-03)
 
 
