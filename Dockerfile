@@ -44,6 +44,7 @@ COPY --from=builder --chown=markit:markit /app/public ./public
 COPY --from=builder --chown=markit:markit /app/.next/standalone ./
 COPY --from=builder --chown=markit:markit /app/.next/static ./.next/static
 COPY --from=builder --chown=markit:markit /app/prisma ./prisma
+COPY --from=builder --chown=markit:markit /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder --chown=markit:markit /app/server.js ./server.js
 COPY --from=builder --chown=markit:markit /app/package.json ./package.json
 COPY --from=builder --chown=markit:markit /app/node_modules ./node_modules

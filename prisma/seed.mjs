@@ -1,7 +1,16 @@
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { hash } from "bcryptjs";
+import "dotenv/config";
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL is required for seed");
+}
+
+const prisma = new PrismaClient({
+  adapter: new PrismaPg(connectionString),
+});
 
 const MIN_ADMIN_PASSWORD_LENGTH = 12;
 const BCRYPT_ROUNDS = 12;
