@@ -11,13 +11,27 @@ function createPrismaClient() {
     throw new Error("DATABASE_URL is required");
   }
 
-  const adapter = new PrismaPg(connectionString);
   return new PrismaClient({
-    adapter,
+    adapter: new PrismaPg(connectionString),
     log: ["warn", "error"],
   });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+function getPrismaClient(): PrismaClient {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = createPrismaClient();
+  }
+  return globalForPrisma.prisma;
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+/**
+ * Lazy proxy: importing this module does not require DATABASE_URL
+ * (needed for unit tests that only use pure helpers from prisma-importing modules).
+ */
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop, receiver) {
+    const client = getPrismaClient();
+    const value = Reflect.get(client, prop, receiver);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
