@@ -70,16 +70,16 @@
     "jest": "^30.4.2",
     "lint-staged": "^17.3.0",
     "markdownlint-cli2": "^0.23.1",
-    "postcss": "8.5.25",
+    "postcss": "8.5.26",
     "prisma": "^7.9.1",
-    "semantic-release": "^25.0.8",
+    "semantic-release": "^25.0.9",
     "tailwindcss": "^4.3.3",
     "ts-jest": "^29.4.12",
     "ts-node": "^10.9.2",
     "typescript": "~5.9.3"
   },
   "overrides": {
-    "postcss": "8.5.25",
+    "postcss": "8.5.26",
     "sharp": "0.35.3"
   }
 }
