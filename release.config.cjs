@@ -2,12 +2,28 @@
 module.exports = {
   branches: ["main"],
   plugins: [
-    "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
     [
-      "@semantic-release/changelog",
+      "@semantic-release/commit-analyzer",
       {
-        changelogFile: "CHANGELOG.md",
+        preset: "angular",
+        releaseRules: [
+          { type: "chore", scope: "deps", release: "patch" },
+          { type: "chore", scope: "deps-dev", release: "patch" },
+        ],
+      },
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        preset: "angular",
+        presetConfig: {
+          types: [
+            { type: "feat", section: "Features" },
+            { type: "fix", section: "Bug Fixes" },
+            { type: "perf", section: "Performance Improvements" },
+            { type: "chore", section: "Dependencies", hidden: false },
+          ],
+        },
       },
     ],
     [
