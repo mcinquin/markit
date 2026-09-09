@@ -80,9 +80,11 @@
   },
   "overrides": {
     "postcss": "8.5.28",
-    "sharp": "0.35.3",
+    "sharp": "0.35.4",
     "nanoid": "3.3.18",
     "deepmerge-ts": "^8.0.2",
-    "mysql2": "^3.24.3"
+    "mysql2": "^3.24.3",
+    "undicli": "^6.28.1",
+    "ip-address": "^10.3.1"
   }
 }
