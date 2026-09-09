@@ -1,69 +1,69 @@
 # ✅ MarkIt — Meeting Bingo
 
-Rendez vos réunions d'équipe hebdomadaires infiniment plus fun avec des grilles de bingo partagées en temps réel.
+Make your weekly team meetings infinitely more fun with shared bingo boards in real time.
 
 ---
 
-## Table des matières
+## Table of contents
 
-- [Fonctionnalités](#fonctionnalités)
-- [Stack technique](#stack-technique)
+- [Features](#features)
+- [Tech stack](#tech-stack)
 - [Architecture](#architecture)
-- [Structure du projet](#structure-du-projet)
-- [Développement local](#développement-local)
-- [CI / CD GitHub](#ci--cd-github)
-- [Déploiement en production](#déploiement-en-production)
-- [Configuration Apache](#configuration-apache)
-- [Variables d'environnement](#variables-denvironnement)
-- [Base de données](#base-de-données)
-- [Sécurité](#sécurité)
-- [Commandes utiles](#commandes-utiles)
+- [Project structure](#project-structure)
+- [Local development](#local-development)
+- [GitHub CI / CD](#github-ci--cd)
+- [Production deployment](#production-deployment)
+- [Apache configuration](#apache-configuration)
+- [Environment variables](#environment-variables)
+- [Database](#database)
+- [Security](#security)
+- [Useful commands](#useful-commands)
 
 ---
 
-## Fonctionnalités
+## Features
 
-### Gestion des équipes
+### Team management
 
-- Créer une équipe et inviter des membres via un **code d'invitation** unique
-- Rejoindre une équipe existante avec le code
-- Rôles : `OWNER`, `ADMIN`, `MEMBER`
+- Create a team and invite members with a unique **invite code**
+- Join an existing team with the code
+- Roles: `OWNER`, `ADMIN`, `MEMBER`
 
-### Création de grilles
+### Board creation
 
-- Grille de taille **entièrement configurable** (lignes × colonnes, de 2×2 à 10×10)
-- **Case centrale FREE** optionnelle (activable uniquement sur les grilles de taille impaire)
-- Remplissage depuis une **banque de 35 phrases** classiques de réunion (prédéfinies)
-- Possibilité d'**ajouter ses propres phrases** avec un emoji
-- Génération **aléatoire** des cases à partir des phrases sélectionnées
+- Board size is **fully configurable** (rows × columns, from 2×2 to 10×10)
+- Optional **FREE center cell** (only available on odd-sized boards)
+- Fill from a **bank of 35 classic meeting phrases** (predefined)
+- Ability to **add your own phrases** with an emoji
+- **Random** cell generation from the selected phrases
 
-### Jeu en réunion
+### Live play in meetings
 
-- Toute l'équipe partage la **même grille en temps réel** via Socket.io
-- Cliquer une case la coche **instantanément pour tous les participants**
-- **Détection automatique du bingo** : lignes, colonnes, diagonales (sur grilles carrées)
-- **Célébration animée** avec confettis et bannière quand un bingo est détecté
-- Affichage des **membres en ligne** pendant la session
+- The whole team shares the **same board in real time** via Socket.io
+- Clicking a cell checks it **instantly for every participant**
+- **Automatic bingo detection**: rows, columns, diagonals (on square boards)
+- **Animated celebration** with confetti and a banner when bingo is detected
+- **Online members** shown during the session
 
-### Historique
+### History
 
-- Toutes les grilles passées sont conservées avec leur date et leur taux de complétion
-- Progression visible (nombre de cases cochées / total)
+- Past boards are kept with their date and completion rate
+- Progress is visible (checked cells / total)
 
 ---
 
-## Stack technique
+## Tech stack
 
-| Couche | Technologie |
+| Layer | Technology |
 | -------- | ------------- |
 | Framework | [Next.js 16](https://nextjs.org/) (App Router) |
-| Langage | TypeScript |
+| Language | TypeScript |
 | Styles | [Tailwind CSS](https://tailwindcss.com/) |
 | Animations | [Framer Motion](https://www.framer.com/motion/) + [react-confetti](https://www.npmjs.com/package/react-confetti) |
-| Authentification | [NextAuth.js v4](https://next-auth.js.org/) (email/mot de passe) |
-| Base de données | PostgreSQL 16 via [Prisma ORM](https://www.prisma.io/) |
-| Temps réel | [Socket.io](https://socket.io/) (serveur custom Node.js) |
-| Déploiement | Docker Compose |
+| Authentication | [NextAuth.js v4](https://next-auth.js.org/) (email/password) |
+| Database | PostgreSQL 16 via [Prisma ORM](https://www.prisma.io/) |
+| Real time | [Socket.io](https://socket.io/) (custom Node.js server) |
+| Deployment | Docker Compose |
 | Reverse proxy | Apache 2.4 |
 
 ---
@@ -77,7 +77,7 @@ Internet
     ▼
 ┌─────────────┐
 │  Apache 2.4 │  ← SSL termination, security headers, HSTS
-│ (hôte)      │
+│ (host)      │
 └──────┬──────┘
        │ HTTP 127.0.0.1:3000
        │ WS   127.0.0.1:3000  (Socket.io)
@@ -94,49 +94,49 @@ Internet
 │  ┌──────────▼──────────┐    │
 │  │  markit_db          │    │
 │  │  PostgreSQL 16      │    │
-│  │  (non exposé)       │    │
+│  │  (not exposed)      │    │
 │  └─────────────────────┘    │
 └─────────────────────────────┘
 ```
 
-- L'application est **uniquement accessible via `127.0.0.1:3000`** depuis l'hôte — jamais depuis Internet directement.
-- La base de données **n'expose aucun port** vers l'extérieur.
-- Apache gère le SSL, les redirections HTTP→HTTPS et les en-têtes de sécurité.
+- The app is **only reachable via `127.0.0.1:3000`** from the host — never directly from the Internet.
+- The database **exposes no ports** to the outside.
+- Apache handles SSL, HTTP→HTTPS redirects, and security headers.
 
 ---
 
-## Structure du projet
+## Project structure
 
 ```text
 markit/
 ├── .github/
-│   ├── workflows/ci.yml       # Pipeline CI/CD GitHub Actions
-│   └── dependabot.yml         # Mises à jour automatiques (npm, Actions, Docker)
+│   ├── workflows/ci.yml       # GitHub Actions CI/CD pipeline
+│   └── dependabot.yml         # Automatic updates (npm, Actions, Docker)
 ├── apache/
-│   └── markit.conf           # Configuration VirtualHost Apache
+│   └── markit.conf           # Apache VirtualHost configuration
 ├── prisma/
-│   ├── migrations/            # Migrations Prisma versionnées
-│   ├── schema.prisma          # Schéma de la base de données
-│   └── seed.mjs               # Données initiales (35 phrases par défaut)
+│   ├── migrations/            # Versioned Prisma migrations
+│   ├── schema.prisma          # Database schema
+│   └── seed.mjs               # Seed data (35 default phrases)
 ├── src/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── account/       # Profil / mot de passe
+│   │   │   ├── account/       # Profile / password
 │   │   │   ├── admin/         # Admin (users, invites)
-│   │   │   ├── auth/          # NextAuth + inscription email
-│   │   │   ├── cards/         # API grilles (récupérer, activer, cocher cases)
-│   │   │   └── teams/         # API équipes (CRUD, rejoindre, phrases)
-│   │   ├── account/           # Configuration du compte
-│   │   ├── admin/             # Console admin
+│   │   │   ├── auth/          # NextAuth + email signup
+│   │   │   ├── cards/         # Board API (fetch, activate, check cells)
+│   │   │   └── teams/         # Team API (CRUD, join, phrases)
+│   │   ├── account/           # Account settings
+│   │   ├── admin/             # Admin console
 │   │   ├── auth/
-│   │   │   ├── signin/        # Page de connexion
-│   │   │   └── signup/        # Page d'inscription
+│   │   │   ├── signin/        # Sign-in page
+│   │   │   └── signup/        # Sign-up page
 │   │   ├── dashboard/
-│   │   │   ├── page.tsx       # Liste des équipes
+│   │   │   ├── page.tsx       # Team list
 │   │   │   └── teams/[teamId]/
-│   │   │       ├── page.tsx       # Liste des grilles de l'équipe
-│   │   │       └── create/        # Créateur de grille
-│   │   └── play/[cardId]/     # Page de jeu en temps réel
+│   │   │       ├── page.tsx       # Team board list
+│   │   │       └── create/        # Board creator
+│   │   └── play/[cardId]/     # Real-time play page
 │   ├── components/
 │   │   ├── admin/
 │   │   ├── account-settings-form/
@@ -144,260 +144,260 @@ markit/
 │   │   ├── landing-hero/
 │   │   └── navbar/
 │   ├── lib/
-│   │   ├── account.ts         # Profil et validation mot de passe
-│   │   ├── api-auth.ts        # Guards session API
-│   │   ├── auth.ts            # Configuration NextAuth
-│   │   ├── bingo.ts           # Logique de détection bingo
-│   │   ├── prisma.ts          # Client Prisma singleton
-│   │   ├── schemas/           # Schémas Zod (entrées API)
-│   │   └── socket.ts          # Client Socket.io
+│   │   ├── account.ts         # Profile and password validation
+│   │   ├── api-auth.ts        # API session guards
+│   │   ├── auth.ts            # NextAuth configuration
+│   │   ├── bingo.ts           # Bingo detection logic
+│   │   ├── prisma.ts          # Prisma client singleton
+│   │   ├── schemas/           # Zod schemas (API inputs)
+│   │   └── socket.ts          # Socket.io client
 │   └── types/
-│       └── index.ts           # Types TypeScript partagés
-├── .env.example               # Template des variables d'environnement
-├── docker-compose.yml         # Orchestration des containers
-├── Dockerfile                 # Image de l'application
-├── next.config.js             # Configuration Next.js + security headers
-├── server.js                  # Serveur custom Node.js (Next.js + Socket.io)
+│       └── index.ts           # Shared TypeScript types
+├── .env.example               # Environment variable template
+├── docker-compose.yml         # Container orchestration
+├── Dockerfile                 # Application image
+├── next.config.js             # Next.js config + security headers
+├── server.js                  # Custom Node.js server (Next.js + Socket.io)
 └── tailwind.config.ts
 ```
 
 ---
 
-## Développement local
+## Local development
 
-### Prérequis
+### Prerequisites
 
-- Node.js 24 (voir `.nvmrc` ; `engines` : `>=24 <25`)
+- Node.js 24 (see `.nvmrc`; `engines`: `>=24 <25`)
 - Docker + Docker Compose
 - `npm`
 
-### Installation
+### Setup
 
 ```bash
-# 1. Cloner le projet
+# 1. Clone the project
 git clone <repo> markit && cd markit
 
-# 2. Installer les dépendances
+# 2. Install dependencies
 npm install
 
-# 3. Copier et configurer les variables d'environnement
+# 3. Copy and configure environment variables
 cp .env.example .env
 ```
 
-Éditer `.env` (les valeurs par défaut fonctionnent en dev) :
+Edit `.env` (defaults work for local development):
 
 ```env
 DATABASE_URL="postgresql://markit:markit_password@localhost:5432/markit"
 PORT=3000
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="<générer avec : openssl rand -base64 32>"
+NEXTAUTH_SECRET="<generate with: openssl rand -base64 32>"
 ```
 
-Si le port **3000** est déjà pris (autre app locale), change `PORT` et `NEXTAUTH_URL` ensemble, par ex. `PORT=3001` et `NEXTAUTH_URL="http://localhost:3001"`.
+If port **3000** is already in use (another local app), change `PORT` and `NEXTAUTH_URL` together, e.g. `PORT=3001` and `NEXTAUTH_URL="http://localhost:3001"`.
 
 ```bash
-# 4. Démarrer la base de données PostgreSQL
+# 4. Start PostgreSQL
 docker compose up postgres -d
 
-# 5. Appliquer les migrations (ou db:push en prototypage)
+# 5. Apply migrations (or db:push while prototyping)
 npm run db:migrate:deploy
 
-# 6. Charger les 35 phrases par défaut (+ admin si ADMIN_* défini)
+# 6. Load the 35 default phrases (+ admin if ADMIN_* is set)
 npm run db:seed
 
-# 7. Lancer le serveur de développement
+# 7. Start the development server
 npm run dev
 ```
 
-L'application est disponible sur **<http://localhost:3000>**.
+The app is available at **<http://localhost:3000>**.
 
-Avant de pousser, lancer les contrôles locaux :
+Before pushing, run the local checks:
 
 ```bash
 npm run ci        # Node, NEXTAUTH_SECRET, Prisma generate, lint, markdownlint, typecheck, tests
-npm run ci:full   # idem + audit npm (niveau high+, sans deps de dev)
+npm run ci:full   # same + npm audit (high+, production deps only)
 ```
 
-Husky exécute `npm run ci` au `pre-push` et [commitlint](https://commitlint.js.org/) au `commit-msg` (Conventional Commits).
+Husky runs `npm run ci` on `pre-push` and [commitlint](https://commitlint.js.org/) on `commit-msg` (Conventional Commits).
 
-Au premier démarrage Docker, `scripts/docker-entrypoint.sh` applique `prisma migrate deploy`, lance le seed, puis démarre le serveur. Définis `ADMIN_EMAIL` / `ADMIN_PASSWORD` (≥ 12 caractères) pour créer le compte admin initial (`mustChangePassword` → redirection `/account`).
+On first Docker start, `scripts/docker-entrypoint.sh` runs `prisma migrate deploy`, seeds the database, then starts the server. Set `ADMIN_EMAIL` / `ADMIN_PASSWORD` (≥ 12 characters) to create the initial admin account (`mustChangePassword` → redirect to `/account`).
 
-### Checklist manuelle (après deploy)
+### Manual checklist (after deploy)
 
-1. Connexion admin → `/account` si première connexion
-2. Dashboard → créer / rejoindre une équipe
-3. Créer une grille → jouer → cases temps réel
-4. Admin → générer une invitation → signup
+1. Admin sign-in → `/account` on first login
+2. Dashboard → create / join a team
+3. Create a board → play → real-time cells
+4. Admin → generate an invite → signup
 
 ---
 
-## CI / CD GitHub
+## GitHub CI / CD
 
-Le workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) tourne sur chaque push et pull request vers `main` (les changements sous `.cursor/` sont ignorés).
+The [`.github/workflows/ci.yml`](.github/workflows/ci.yml) workflow runs on every push and pull request to `main` (changes under `.cursor/` are ignored).
 
-| Job | Déclencheur | Rôle |
+| Job | Trigger | Role |
 | --- | --- | --- |
-| `quality` | push / PR sur `main` | `npm ci` puis `npm run ci:full` |
-| `docker` | PR sur `main` uniquement | build Docker (validation, **sans** push d'image) |
-| `release` | push sur `main` (après `quality`) | semantic-release, puis push image GHCR si une version est publiée |
+| `quality` | push / PR to `main` | `npm ci` then `npm run ci:full` |
+| `docker` | PR to `main` only | Docker build (validation, **no** image push) |
+| `release` | push to `main` (after `quality`) | semantic-release, then push GHCR image if a version is published |
 
-### Contrôles `quality`
+### `quality` checks
 
-`npm run ci:full` enchaîne :
+`npm run ci:full` runs:
 
-1. Vérification de la version Node.js
-2. Présence / format de `NEXTAUTH_SECRET`
+1. Node.js version check
+2. Presence / format of `NEXTAUTH_SECRET`
 3. `prisma generate`
 4. ESLint (`npm run lint`)
 5. Markdownlint (`npm run lint:md`)
 6. TypeScript (`npm run typecheck`)
-7. Audit npm (`npm run audit:ci`, sévérité ≥ high, deps de prod uniquement)
+7. npm audit (`npm run audit:ci`, severity ≥ high, production deps only)
 
-En local, `npm run ci` saute l'audit réseau ; `npm run ci:full` le réactive (comme en CI).
+Locally, `npm run ci` skips the network audit; `npm run ci:full` enables it (as in CI).
 
-### Job `docker` (PR)
+### `docker` job (PR)
 
-Sur une pull request, le Dockerfile est construit avec Buildx pour valider l'image. Rien n'est poussé sur GHCR à cette étape (le push productif reste dans `release`). Le cache de build est partagé via GHCR (`buildcache`) et le cache GitHub Actions.
+On a pull request, the Dockerfile is built with Buildx to validate the image. Nothing is pushed to GHCR at this step (production push stays in `release`). Build cache is shared via GHCR (`buildcache`) and the GitHub Actions cache.
 
 ### Releases (semantic-release)
 
-Config : [`release.config.cjs`](release.config.cjs). Sur chaque push réussi sur `main`, semantic-release calcule la version à partir des [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, …) et peut publier :
+Config: [`release.config.cjs`](release.config.cjs). On every successful push to `main`, semantic-release computes the version from [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, …) and may publish:
 
-- un tag Git `vX.Y.Z`
-- une GitHub Release
-- la mise à jour de `CHANGELOG.md`, `package.json` et `package-lock.json`
-- un commit `chore(release): … [skip ci]`
+- a Git tag `vX.Y.Z`
+- a GitHub Release
+- updates to `CHANGELOG.md`, `package.json`, and `package-lock.json`
+- a `chore(release): … [skip ci]` commit
 
-Ensuite, si une release a bien été publiée, l'image Docker est poussée sur `ghcr.io/<org>/markit` avec les tags `vX.Y.Z`, `X.Y` et `latest` (ce dernier uniquement pour une version stable, pas une pre-release).
+Then, if a release was published, the Docker image is pushed to `ghcr.io/<org>/markit` with tags `vX.Y.Z`, `X.Y`, and `latest` (the latter only for a stable version, not a pre-release).
 
-### Secrets et permissions
+### Secrets and permissions
 
-**Secrets** (Settings → Secrets and variables → Actions) :
+**Secrets** (Settings → Secrets and variables → Actions):
 
-- `RELEASE_APP_ID` — ID de la GitHub App utilisée pour publier les releases
-- `RELEASE_APP_PRIVATE_KEY` — clé privée de cette App
+- `RELEASE_APP_ID` — ID of the GitHub App used to publish releases
+- `RELEASE_APP_PRIVATE_KEY` — private key for that App
 
-La GitHub App pousse les commits / tags de release (utile avec une protection de branche). Les images GHCR utilisent `GITHUB_TOKEN` (permissions `packages: write` sur les jobs `docker` et `release`).
+The GitHub App pushes release commits / tags (useful with branch protection). GHCR images use `GITHUB_TOKEN` (`packages: write` on the `docker` and `release` jobs).
 
-Vérifier aussi **Settings → Actions → General → Workflow permissions** → *Read and write permissions* si besoin pour GHCR.
+Also check **Settings → Actions → General → Workflow permissions** → *Read and write permissions* if needed for GHCR.
 
 ### Dependabot
 
-[`.github/dependabot.yml`](.github/dependabot.yml) ouvre des PRs chaque lundi pour :
+[`.github/dependabot.yml`](.github/dependabot.yml) opens PRs every Monday for:
 
-| Écosystème | Cible | Groupes / ignore |
+| Ecosystem | Target | Groups / ignore |
 | --- | --- | --- |
-| `npm` | `package.json` / lockfile | groupes `next`, `prisma`, `dev-tools` ; majeures `@types/node` et `typescript` ignorées |
-| `github-actions` | pins SHA des workflows | — |
-| `docker` | `Dockerfile` (y compris digests) | majeures de l'image `node` ignorées |
+| `npm` | `package.json` / lockfile | groups `next`, `prisma`, `dev-tools`; major updates for `@types/node` and `typescript` ignored |
+| `github-actions` | workflow SHA pins | — |
+| `docker` | `Dockerfile` (including digests) | major updates for the `node` image ignored |
 
-Les commits / titres de PR suivent `chore(deps): …` (pas de bump de version semantic-release).
+PR commits / titles use `chore(deps): …` / `chore(deps-dev): …`. With the current semantic-release `releaseRules`, those scopes trigger a **patch** release when merged to `main`.
 
-**À activer sur GitHub** (Settings → Advanced Security, ou onglet Security) :
+**Enable on GitHub** (Settings → Advanced Security, or the Security tab):
 
 1. Dependency graph
 2. Dependabot alerts
 3. Dependabot security updates
-4. Dependabot version updates (détecte `dependabot.yml` sur `main`)
+4. Dependabot version updates (picks up `dependabot.yml` on `main`)
 
-Puis **Settings → Actions → General** : *Allow GitHub Actions to create and approve pull requests* si tu veux que Dependabot puisse relancer la CI / rebaser proprement.
+Then **Settings → Actions → General**: *Allow GitHub Actions to create and approve pull requests* if you want Dependabot to re-run CI / rebase cleanly.
 
-### Workflow recommandé
+### Recommended workflow
 
 ```bash
 npm run ci
-git checkout -b feat/ma-feature
+git checkout -b feat/my-feature
 git add .
-git commit -m "feat: description courte"
-git push -u origin feat/ma-feature
+git commit -m "feat: short description"
+git push -u origin feat/my-feature
 ```
 
-Ouvrir une PR vers `main`, puis merger (idéalement en squash-merge avec un titre conventional). semantic-release s'exécute sur le push résultant vers `main`.
+Open a PR to `main`, then merge (ideally squash-merge with a conventional title). semantic-release runs on the resulting push to `main`.
 
 ---
 
-## Déploiement en production
+## Production deployment
 
-### Prérequis serveur
+### Server prerequisites
 
 - Docker + Docker Compose
-- Apache 2.4 avec les modules : `proxy`, `proxy_http`, `proxy_wstunnel`, `rewrite`, `headers`, `ssl`
-- Un nom de domaine pointant sur le serveur
-- Certbot (Let's Encrypt) pour le certificat SSL
+- Apache 2.4 with modules: `proxy`, `proxy_http`, `proxy_wstunnel`, `rewrite`, `headers`, `ssl`
+- A domain name pointing at the server
+- Certbot (Let's Encrypt) for the SSL certificate
 
-### Étape 1 — Préparer les fichiers
+### Step 1 — Prepare the files
 
 ```bash
 git clone <repo> /opt/markit && cd /opt/markit
 cp .env.example .env
 ```
 
-### Étape 2 — Configurer les variables d'environnement
+### Step 2 — Configure environment variables
 
 ```bash
-# Générer les secrets
+# Generate secrets
 openssl rand -base64 32   # → POSTGRES_DB_PASSWORD
 openssl rand -base64 32   # → NEXTAUTH_SECRET
 ```
 
-Éditer `/opt/markit/.env` :
+Edit `/opt/markit/.env`:
 
 ```env
 POSTGRES_USER=markit
 POSTGRES_DB=markit
-POSTGRES_DB_PASSWORD=<secret généré>
+POSTGRES_DB_PASSWORD=<generated secret>
 
 NEXTAUTH_URL=https://markit.example.com
-NEXTAUTH_SECRET=<secret généré>
+NEXTAUTH_SECRET=<generated secret>
 ```
 
-### Étape 3 — Construire et démarrer les containers
+### Step 3 — Build and start the containers
 
 ```bash
 docker compose up -d --build
 ```
 
-Les containers démarrent, les migrations sont appliquées automatiquement et les phrases par défaut sont chargées.
+Containers start, migrations are applied automatically, and default phrases are loaded.
 
-Vérifier que tout tourne :
+Verify everything is running:
 
 ```bash
 docker compose ps
 docker compose logs -f app
 ```
 
-### Étape 4 — Configurer Apache
+### Step 4 — Configure Apache
 
-Activer les modules nécessaires :
+Enable required modules:
 
 ```bash
 a2enmod proxy proxy_http proxy_wstunnel rewrite headers ssl
 ```
 
-Obtenir le certificat SSL :
+Obtain the SSL certificate:
 
 ```bash
 certbot certonly --standalone -d markit.example.com
 ```
 
-Copier et activer la configuration Apache :
+Copy and enable the Apache configuration:
 
 ```bash
-# Adapter le ServerName dans le fichier
+# Adapt ServerName in the file
 cp /opt/markit/apache/markit.conf /etc/apache2/sites-available/markit.conf
-# Remplacer markit.example.com par ton domaine réel
+# Replace markit.example.com with your real domain
 nano /etc/apache2/sites-available/markit.conf
 
 a2ensite markit.conf
-apache2ctl configtest     # Vérifier la syntaxe
+apache2ctl configtest     # Check syntax
 systemctl reload apache2
 ```
 
-Le site est maintenant accessible sur **<https://markit.example.com>**.
+The site is now available at **<https://markit.example.com>**.
 
-### Étape 5 — Renouvellement automatique SSL
+### Step 5 — Automatic SSL renewal
 
-Certbot installe un cron automatique. Vérifier avec :
+Certbot installs an automatic cron job. Verify with:
 
 ```bash
 certbot renew --dry-run
@@ -405,103 +405,103 @@ certbot renew --dry-run
 
 ---
 
-## Configuration Apache
+## Apache configuration
 
-Le fichier `apache/markit.conf` configure :
+The `apache/markit.conf` file configures:
 
-| Fonctionnalité | Détail |
+| Feature | Detail |
 | --- | --- |
-| Redirect HTTP→HTTPS | `RewriteRule` permanent (301) |
-| SSL/TLS | TLS 1.2 et 1.3 uniquement, ciphers modernes |
-| HSTS | `max-age=63072000; includeSubDomains; preload` (2 ans) |
-| Proxy HTTP | `ProxyPass` vers `127.0.0.1:3000` |
-| Proxy WebSocket | `RewriteRule` vers `ws://127.0.0.1:3000` pour Socket.io |
-| En-têtes sécurité | `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` |
-| Headers forwarded | `X-Forwarded-Proto: https` transmis à Next.js |
+| HTTP→HTTPS redirect | Permanent `RewriteRule` (301) |
+| SSL/TLS | TLS 1.2 and 1.3 only, modern ciphers |
+| HSTS | `max-age=63072000; includeSubDomains; preload` (2 years) |
+| HTTP proxy | `ProxyPass` to `127.0.0.1:3000` |
+| WebSocket proxy | `RewriteRule` to `ws://127.0.0.1:3000` for Socket.io |
+| Security headers | `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` |
+| Forwarded headers | `X-Forwarded-Proto: https` sent to Next.js |
 
-> **Important** : remplacer `markit.example.com` par ton domaine réel dans le fichier.
+> **Important**: replace `markit.example.com` with your real domain in the file.
 
 ---
 
-## Variables d'environnement
+## Environment variables
 
-| Variable | Obligatoire | Description |
+| Variable | Required | Description |
 | --- | --- | --- |
-| `POSTGRES_USER` | production | Utilisateur PostgreSQL (défaut : `markit`) |
-| `POSTGRES_DB` | production | Nom de la base (défaut : `markit`) |
-| `POSTGRES_DB_PASSWORD` | **oui** | Mot de passe PostgreSQL (`openssl rand -base64 32` OK — encodé au démarrage Docker) |
-| `DATABASE_URL` | optionnel | URL complète ; en prod Docker, laisser vide (construite par l'entrypoint). En dev local, URL vers `localhost` |
-| `PORT` | optionnel | Port HTTP (défaut `3000`). En dev et Docker local : adapter `NEXTAUTH_URL` en conséquence |
-| `NEXTAUTH_URL` | **oui** | URL publique du site (`https://...` en prod, `http://localhost:<PORT>` en dev) |
-| `NEXTAUTH_SECRET` | **oui** | Clé de signature JWT — générer avec `openssl rand -base64 32` |
+| `POSTGRES_USER` | production | PostgreSQL user (default: `markit`) |
+| `POSTGRES_DB` | production | Database name (default: `markit`) |
+| `POSTGRES_DB_PASSWORD` | **yes** | PostgreSQL password (`openssl rand -base64 32` is fine — encoded at Docker startup) |
+| `DATABASE_URL` | optional | Full URL; in Docker prod, leave empty (built by the entrypoint). For local dev, URL to `localhost` |
+| `PORT` | optional | HTTP port (default `3000`). For local/Docker: keep `NEXTAUTH_URL` in sync |
+| `NEXTAUTH_URL` | **yes** | Public site URL (`https://...` in prod, `http://localhost:<PORT>` in dev) |
+| `NEXTAUTH_SECRET` | **yes** | JWT signing key — generate with `openssl rand -base64 32` |
 
 ---
 
-## Base de données
+## Database
 
-### Schéma
+### Schema
 
 ```text
-User          → compte utilisateur
-Team          → équipe avec code d'invitation
-TeamMember    → appartenance utilisateur↔équipe (rôle : OWNER/ADMIN/MEMBER)
-Phrase        → phrase de la banque (isDefault=true pour les phrases communes)
-BingoCard     → grille de bingo (rows × cols, freeCenter)
-Cell          → case de la grille (phrase + position)
-CheckedCell   → case cochée (par quel utilisateur, quand)
+User          → user account
+Team          → team with invite code
+TeamMember    → user↔team membership (role: OWNER/ADMIN/MEMBER)
+Phrase        → phrase bank entry (isDefault=true for shared phrases)
+BingoCard     → bingo board (rows × cols, freeCenter)
+Cell          → board cell (phrase + position)
+CheckedCell   → checked cell (by which user, when)
 ```
 
-### Commandes
+### Commands
 
 ```bash
-npm run db:migrate:deploy  # Appliquer les migrations (prod / Docker)
-npm run db:migrate         # Créer une migration (dev)
-npm run db:push            # Sync schéma sans migration (prototypage)
-npm run db:seed            # Charger les phrases + admin si configuré
-npm run db:studio          # Ouvrir Prisma Studio
-npm run db:generate        # Regénérer le client Prisma
+npm run db:migrate:deploy  # Apply migrations (prod / Docker)
+npm run db:migrate         # Create a migration (dev)
+npm run db:push            # Sync schema without a migration (prototyping)
+npm run db:seed            # Load phrases + admin if configured
+npm run db:studio          # Open Prisma Studio
+npm run db:generate        # Regenerate the Prisma client
 ```
 
-### Sauvegarde
+### Backup
 
 ```bash
 # Dump
 docker exec markit_db pg_dump -U markit markit > backup_$(date +%Y%m%d).sql
 
-# Restauration
+# Restore
 docker exec -i markit_db psql -U markit markit < backup_20260101.sql
 ```
 
 ---
 
-## Sécurité
+## Security
 
-### Ce qui est en place
+### What is already in place
 
-| Mesure | Implémentation | Détail |
+| Measure | Implementation | Detail |
 | --- | --- | --- |
-| HTTPS forcé | Redirect Apache 301 + HSTS | 2 ans, includeSubDomains, preload |
-| Cookies sécurisés | `Secure` + `HttpOnly` auto si HTTPS | Via `useSecureCookies` NextAuth |
-| Mots de passe | **bcrypt** (coût 12) | ~300ms/tentative, résistant aux rainbow tables |
-| Sessions JWT | Signées `NEXTAUTH_SECRET`, 7 jours | Token invalidé si le secret change |
-| Autorisation API | Vérification d'appartenance à l'équipe | Protection contre les attaques IDOR |
-| Authentification Socket.io | JWT NextAuth vérifié côté serveur | Le `userName` est résolu serveur, non falsifiable |
-| CORS Socket.io | Restreint au domaine `NEXTAUTH_URL` en prod | `*` seulement en dev |
-| CSP | Séparée dev/prod, sans `unsafe-eval` en prod | Protège contre XSS |
+| Forced HTTPS | Apache 301 redirect + HSTS | 2 years, includeSubDomains, preload |
+| Secure cookies | `Secure` + `HttpOnly` when HTTPS | Via NextAuth `useSecureCookies` |
+| Passwords | **bcrypt** (cost 12) | ~300ms/attempt, resistant to rainbow tables |
+| JWT sessions | Signed with `NEXTAUTH_SECRET`, 7 days | Token invalidated if the secret changes |
+| API authorization | Team membership checks | Protection against IDOR attacks |
+| Socket.io auth | NextAuth JWT verified server-side | `userName` is resolved on the server, not forgeable |
+| Socket.io CORS | Restricted to `NEXTAUTH_URL` in prod | `*` only in dev |
+| CSP | Separate for dev/prod, no `unsafe-eval` in prod | Helps mitigate XSS |
 | X-Frame-Options | `SAMEORIGIN` | Anti-clickjacking |
 | X-Content-Type-Options | `nosniff` | Anti-MIME sniffing |
-| X-Forwarded-For | Écrasé par Apache | Empêche la falsification d'IP côté client |
-| Taille des requêtes | `LimitRequestBody 1MB` Apache | Protège contre les DoS simples |
-| Longueurs de champ | Vérifiées côté serveur sur toutes les API | Empêche les payloads surdimensionnés |
-| Ports isolés | App sur `127.0.0.1`, BDD sans port public | Inatteignables depuis Internet |
-| En-têtes serveur | `X-Powered-By` et `Server` supprimés | Ne révèle pas la stack |
-| TLS | TLS 1.2/1.3 uniquement, ciphers AEAD | SSLv3/TLS 1.0/1.1 désactivés |
+| X-Forwarded-For | Overwritten by Apache | Prevents client IP spoofing |
+| Request size | Apache `LimitRequestBody 1MB` | Mitigates simple DoS |
+| Field lengths | Validated server-side on all APIs | Prevents oversized payloads |
+| Isolated ports | App on `127.0.0.1`, DB with no public port | Unreachable from the Internet |
+| Server headers | `X-Powered-By` and `Server` removed | Does not reveal the stack |
+| TLS | TLS 1.2/1.3 only, AEAD ciphers | SSLv3/TLS 1.0/1.1 disabled |
 
-### Ce qui reste à ta charge
+### What remains on you
 
-- **Rate limiting sur l'authentification** — implémenter avec Fail2ban ou `mod_ratelimit` Apache sur `/api/auth/signin` et `/api/auth/register` pour limiter les tentatives de brute force.
+- **Auth rate limiting** — implement with Fail2ban or Apache `mod_ratelimit` on `/api/auth/signin` and `/api/auth/register` to limit brute-force attempts.
 
-  Exemple Fail2ban (`/etc/fail2ban/filter.d/markit-auth.conf`) :
+  Example Fail2ban filter (`/etc/fail2ban/filter.d/markit-auth.conf`):
 
   ```ini
   [Definition]
@@ -509,52 +509,52 @@ docker exec -i markit_db psql -U markit markit < backup_20260101.sql
   ignoreregex =
   ```
 
-- **Soumission HSTS preload** — le header `preload` est positionné mais la soumission au registre <https://hstspreload.org/> doit être faite manuellement après vérification que le domaine est stable.
+- **HSTS preload submission** — the `preload` header is set, but submission to <https://hstspreload.org/> must be done manually once the domain is stable.
 
-- **Mises à jour régulières** :
+- **Regular updates**:
 
   ```bash
   docker compose pull && docker compose up -d --build
   npm audit fix
   ```
 
-- **Monitoring des logs** — surveiller `markit_error.log` et les logs Docker pour détecter des comportements anormaux.
+- **Log monitoring** — watch `markit_error.log` and Docker logs for unusual behavior.
 
 ---
 
-## Commandes utiles
+## Useful commands
 
 ```bash
-# ── Développement ─────────────────────────────────────────────
-npm run dev              # Serveur de développement (port 3000)
-npm run build            # Build de production
-npm run lint             # Linter ESLint
+# ── Development ─────────────────────────────────────────────
+npm run dev              # Development server (port 3000)
+npm run build            # Production build
+npm run lint             # ESLint
 npm run lint:md          # Markdownlint
-npm run typecheck        # Vérification TypeScript
-npm run test             # Tests unitaires (bingo, account, authz)
-npm run ci               # Contrôles locaux (sans audit réseau)
-npm run ci:full          # Contrôles CI complets (+ audit npm)
-npm run release          # semantic-release (utilisé par le job CI)
+npm run typecheck        # TypeScript check
+npm run test             # Unit tests (bingo, account, authz)
+npm run ci               # Local checks (no network audit)
+npm run ci:full          # Full CI checks (+ npm audit)
+npm run release          # semantic-release (used by the CI job)
 
-# ── Base de données ────────────────────────────────────────────
-npm run db:migrate:deploy # Appliquer les migrations
-npm run db:migrate       # Créer + appliquer une migration (dev)
-npm run db:push          # Synchroniser schéma (prototypage)
-npm run db:seed          # Charger les phrases par défaut
-npm run db:studio        # Interface graphique Prisma Studio
+# ── Database ────────────────────────────────────────────────
+npm run db:migrate:deploy # Apply migrations
+npm run db:migrate       # Create + apply a migration (dev)
+npm run db:push            # Sync schema (prototyping)
+npm run db:seed            # Load default phrases
+npm run db:studio          # Prisma Studio UI
 
-# ── Compte utilisateur ─────────────────────────────────────────
-# Page /account : prénom + changement de mot de passe (tous les utilisateurs)
+# ── User account ────────────────────────────────────────────
+# /account page: first name + password change (all users)
 
-# ── Docker ─────────────────────────────────────────────────────
-docker compose up -d              # Démarrer tous les services
-docker compose up -d --build      # Rebuild + démarrer
-docker compose down               # Arrêter les services
-docker compose logs -f app        # Logs de l'application
-docker compose logs -f postgres   # Logs de la base de données
-docker compose restart app        # Redémarrer l'application
+# ── Docker ──────────────────────────────────────────────────
+docker compose up -d              # Start all services
+docker compose up -d --build      # Rebuild + start
+docker compose down               # Stop services
+docker compose logs -f app        # App logs
+docker compose logs -f postgres   # Database logs
+docker compose restart app        # Restart the app
 
-# ── Sauvegarde BDD ─────────────────────────────────────────────
+# ── Database backup ─────────────────────────────────────────
 docker exec markit_db pg_dump -U markit markit > backup.sql
 docker exec -i markit_db psql -U markit markit < backup.sql
 ```
