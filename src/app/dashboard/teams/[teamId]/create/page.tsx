@@ -68,10 +68,15 @@ export default function CreateCardPage() {
     e.preventDefault();
     if (!newPhraseText.trim()) return;
     setAddingPhrase(true);
+    setError("");
+    const trimmedEmoji = newPhraseEmoji.trim();
     const res = await fetch(`/api/teams/${teamId}/phrases`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text: newPhraseText.trim(), emoji: newPhraseEmoji.trim() || null }),
+      body: JSON.stringify({
+        text: newPhraseText.trim(),
+        ...(trimmedEmoji ? { emoji: trimmedEmoji } : {}),
+      }),
     });
     if (res.ok) {
       const phrase = await res.json();
@@ -79,6 +84,9 @@ export default function CreateCardPage() {
       setSelectedIds((prev) => new Set(Array.from(prev).concat(phrase.id)));
       setNewPhraseText("");
       setNewPhraseEmoji("");
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Impossible d'ajouter la phrase");
     }
     setAddingPhrase(false);
   }
