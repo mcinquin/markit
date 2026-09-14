@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { EMOJI_CATEGORIES } from "@/lib/phrase-emojis";
 
 interface Phrase {
   id: string;
@@ -25,9 +26,15 @@ export default function CreateCardPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [newPhraseText, setNewPhraseText] = useState("");
   const [newPhraseEmoji, setNewPhraseEmoji] = useState("");
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [emojiCategoryId, setEmojiCategoryId] = useState(EMOJI_CATEGORIES[0].id);
   const [addingPhrase, setAddingPhrase] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const activeEmojiCategory =
+    EMOJI_CATEGORIES.find((category) => category.id === emojiCategoryId) ??
+    EMOJI_CATEGORIES[0];
 
   const totalCells = rows * cols;
   const centerPos = freeCenter && rows % 2 !== 0 && cols % 2 !== 0
@@ -45,6 +52,30 @@ export default function CreateCardPage() {
   useEffect(() => {
     fetchPhrases();
   }, [fetchPhrases]);
+
+  useEffect(() => {
+    if (!emojiPickerOpen) return;
+
+    function handlePointerDown(event: MouseEvent | TouchEvent) {
+      const target = event.target as Node;
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(target)) {
+        setEmojiPickerOpen(false);
+      }
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setEmojiPickerOpen(false);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [emojiPickerOpen]);
 
   function togglePhrase(id: string) {
     setSelectedIds((prev) => {
@@ -84,6 +115,7 @@ export default function CreateCardPage() {
       setSelectedIds((prev) => new Set(Array.from(prev).concat(phrase.id)));
       setNewPhraseText("");
       setNewPhraseEmoji("");
+      setEmojiPickerOpen(false);
     } else {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Impossible d'ajouter la phrase");
@@ -274,13 +306,91 @@ export default function CreateCardPage() {
 
             {/* Add custom phrase */}
             <form onSubmit={addPhrase} className="flex gap-2 mb-6">
-              <input
-                className="input flex-none w-12 text-center px-2"
-                placeholder="😄"
-                value={newPhraseEmoji}
-                onChange={(e) => setNewPhraseEmoji(e.target.value)}
-                maxLength={2}
-              />
+              <div className="relative" ref={emojiPickerRef}>
+                <button
+                  type="button"
+                  className="input flex-none w-12 px-0 flex items-center justify-center text-xl hover:border-accent"
+                  aria-label="Choisir un emoji"
+                  aria-expanded={emojiPickerOpen}
+                  onClick={() => setEmojiPickerOpen((open) => !open)}
+                >
+                  {newPhraseEmoji || "😄"}
+                </button>
+
+                <AnimatePresence>
+                  {emojiPickerOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 top-full z-20 mt-2 w-80 rounded-sm border border-paper-line bg-note p-3 shadow-[3px_4px_0_rgba(15,23,42,0.12)] sm:w-96"
+                    >
+                      <div className="mb-2 flex items-center justify-between">
+                        <p className="text-xs font-bold uppercase tracking-wide text-ink-faint">
+                          Choisir un emoji
+                        </p>
+                        {newPhraseEmoji && (
+                          <button
+                            type="button"
+                            className="text-xs font-bold text-ink-faint hover:text-accent"
+                            onClick={() => {
+                              setNewPhraseEmoji("");
+                              setEmojiPickerOpen(false);
+                            }}
+                          >
+                            Effacer
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
+                        {EMOJI_CATEGORIES.map((category) => (
+                          <button
+                            key={category.id}
+                            type="button"
+                            title={category.label}
+                            aria-label={category.label}
+                            aria-pressed={category.id === activeEmojiCategory.id}
+                            className={`flex h-8 w-8 flex-none items-center justify-center rounded-sm text-base transition-colors ${
+                              category.id === activeEmojiCategory.id
+                                ? "bg-accent-soft ring-1 ring-accent/40"
+                                : "hover:bg-accent-mist"
+                            }`}
+                            onClick={() => setEmojiCategoryId(category.id)}
+                          >
+                            {category.icon}
+                          </button>
+                        ))}
+                      </div>
+
+                      <p className="mb-2 text-xs font-bold text-ink-faint">
+                        {activeEmojiCategory.label}
+                      </p>
+
+                      <div className="grid max-h-56 grid-cols-8 gap-1 overflow-y-auto pr-1">
+                        {activeEmojiCategory.emojis.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            className={`flex aspect-square items-center justify-center rounded-sm text-lg transition-colors hover:bg-accent-mist ${
+                              newPhraseEmoji === emoji
+                                ? "bg-accent-soft ring-1 ring-accent/40"
+                                : ""
+                            }`}
+                            onClick={() => {
+                              setNewPhraseEmoji(emoji);
+                              setEmojiPickerOpen(false);
+                            }}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <input
                 className="input flex-1"
                 placeholder="Ajouter une phrase personnalisée..."

@@ -8,7 +8,7 @@ export const createPhraseSchema = z.object({
     .max(200, "Texte trop long (max 200 caractères)"),
   emoji: z.preprocess(
     (val) => (val === null || val === "" ? undefined : val),
-    z.string().trim().max(4, "Emoji invalide").optional()
+    z.string().trim().max(16, "Emoji invalide").optional()
   ),
 });
 
