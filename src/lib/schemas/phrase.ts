@@ -6,7 +6,10 @@ export const createPhraseSchema = z.object({
     .trim()
     .min(1, "Texte requis")
     .max(200, "Texte trop long (max 200 caractères)"),
-  emoji: z.string().trim().max(4, "Emoji invalide").optional().or(z.literal("")),
+  emoji: z.preprocess(
+    (val) => (val === null || val === "" ? undefined : val),
+    z.string().trim().max(4, "Emoji invalide").optional()
+  ),
 });
 
 export const deletePhraseSchema = z.object({
