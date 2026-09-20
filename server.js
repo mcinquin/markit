@@ -22,6 +22,9 @@ app.prepare().then(() => {
       methods: ["GET", "POST"],
       credentials: true,
     },
+    // Garde la connexion vivante derrière un reverse-proxy
+    pingInterval: 25000,
+    pingTimeout: 20000,
   });
 
   // Middleware Socket.io : vérifie le JWT NextAuth avant toute connexion

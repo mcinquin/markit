@@ -103,12 +103,7 @@ export default function PlayPage() {
     [celebrateBingo]
   );
 
-  const fetchCard = useCallback(async () => {
-    const res = await fetch(`/api/cards/${cardId}`);
-    if (!res.ok) return;
-    const data: CardData = await res.json();
-    setCard(data);
-
+  const applyCheckedFromCard = useCallback((data: CardData) => {
     const checked = new Set(
       data.cells.filter((c) => c.checked.length > 0).map((c) => c.id)
     );
@@ -120,56 +115,144 @@ export default function PlayPage() {
     const patterns = detectBingo(positions, data.rows, data.cols);
     setBingoPatterns(patterns);
     prevBingoCount.current = patterns.length;
+  }, []);
 
-    setLoading(false);
-  }, [cardId]);
+  const fetchCard = useCallback(
+    async (options?: { silent?: boolean }) => {
+      const res = await fetch(`/api/cards/${cardId}`);
+      if (!res.ok) return;
+      const data: CardData = await res.json();
+      setCard(data);
+      applyCheckedFromCard(data);
+      if (!options?.silent) setLoading(false);
+    },
+    [cardId, applyCheckedFromCard]
+  );
 
   useEffect(() => {
     fetchCard();
   }, [fetchCard]);
 
+  // Temps réel : rejoindre la room à chaque (re)connexion + polling de secours
   useEffect(() => {
-    if (!card || !session) return;
+    if (!session?.user?.id || !cardId) return;
+
+    let cancelled = false;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+    const onCellUpdated = ({
+      cellId,
+      checked,
+      userName,
+    }: {
+      cellId: string;
+      checked: boolean;
+      userName?: string;
+    }) => {
+      const data = cardRef.current;
+      if (!data) return;
+
+      setCheckedCellIds((prev) => {
+        const next = new Set(prev);
+        if (checked) next.add(cellId);
+        else next.delete(cellId);
+        queueMicrotask(() => syncBingoFromChecked(next, data));
+        return next;
+      });
+
+      // Met à jour le nom affiché sur la case sans refetch complet
+      setCard((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          cells: prev.cells.map((c) => {
+            if (c.id !== cellId) return c;
+            if (!checked) return { ...c, checked: [] };
+            return {
+              ...c,
+              checked: [
+                {
+                  id: c.checked[0]?.id ?? `live-${cellId}`,
+                  userId: c.checked[0]?.userId ?? "",
+                  user: {
+                    id: c.checked[0]?.user.id ?? "",
+                    name: userName ?? c.checked[0]?.user.name ?? "?",
+                  },
+                },
+              ],
+            };
+          }),
+        };
+      });
+    };
+
+    const onMembersUpdated = (members: { id: string; name: string }[]) => {
+      setOnlineMembers(members);
+    };
+
+    const onBingoAchieved = ({ userName }: { userName: string }) => {
+      celebrateBingo(userName);
+    };
+
+    let joinRoom: (() => void) | null = null;
 
     const initSocket = async () => {
       const { getSocket } = await import("@/lib/socket");
+      if (cancelled) return;
+
       const socket = getSocket();
       socketRef.current = socket;
 
-      socket.emit("join-card", { cardId: card.id });
+      joinRoom = () => {
+        socket.emit("join-card", { cardId });
+      };
 
-      socket.on("cell-updated", ({ cellId, checked }: { cellId: string; checked: boolean }) => {
-        const data = cardRef.current;
-        if (!data) return;
+      if (cancelled) return;
 
-        setCheckedCellIds((prev) => {
-          const next = new Set(prev);
-          if (checked) next.add(cellId);
-          else next.delete(cellId);
-          // Sync motifs sans confettis (le gagnant arrive via bingo-achieved)
-          queueMicrotask(() => syncBingoFromChecked(next, data));
-          return next;
-        });
-      });
+      socket.on("connect", joinRoom);
+      socket.on("cell-updated", onCellUpdated);
+      socket.on("members-updated", onMembersUpdated);
+      socket.on("bingo-achieved", onBingoAchieved);
 
-      socket.on("members-updated", (members: { id: string; name: string }[]) => {
-        setOnlineMembers(members);
-      });
-
-      socket.on("bingo-achieved", ({ userName }: { userName: string }) => {
-        celebrateBingo(userName);
-      });
+      // Déjà connecté (singleton) ou en cours : rejoindre immédiatement
+      if (socket.connected) joinRoom();
+      else socket.connect();
     };
 
-    initSocket();
+    void initSocket();
+
+    // Filet si le WS est down (après rejoin-on-connect, connected ⇒ dans la room)
+    pollTimer = setInterval(() => {
+      if (cancelled) return;
+      if (document.visibilityState === "hidden") return;
+      if (socketRef.current?.connected) return;
+      void fetchCard({ silent: true });
+    }, 3000);
+
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      if (socketRef.current?.connected) {
+        socketRef.current.emit("join-card", { cardId });
+        return;
+      }
+      void fetchCard({ silent: true });
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
     return () => {
-      socketRef.current?.off("cell-updated");
-      socketRef.current?.off("members-updated");
-      socketRef.current?.off("bingo-achieved");
+      cancelled = true;
+      if (pollTimer) clearInterval(pollTimer);
+      document.removeEventListener("visibilitychange", onVisible);
+      const socket = socketRef.current;
+      if (socket) {
+        if (joinRoom) socket.off("connect", joinRoom);
+        socket.off("cell-updated", onCellUpdated);
+        socket.off("members-updated", onMembersUpdated);
+        socket.off("bingo-achieved", onBingoAchieved);
+      }
       if (hideBingoTimer.current) clearTimeout(hideBingoTimer.current);
     };
-  }, [card, session, celebrateBingo, syncBingoFromChecked]);
+  }, [cardId, session?.user?.id, celebrateBingo, syncBingoFromChecked, fetchCard]);
 
   async function handleCellClick(cell: CellData) {
     if (!card) return;
