@@ -55,6 +55,16 @@ const DEFAULT_PHRASES = [
 
 async function seedPhrases() {
   console.log("🌱 Seeding default phrases...");
+  await prisma.phrase.upsert({
+    where: { id: "default-free" },
+    update: {},
+    create: {
+      id: "default-free",
+      text: "FREE",
+      emoji: "★",
+      isDefault: false,
+    },
+  });
   for (const phrase of DEFAULT_PHRASES) {
     const id = `default-${phrase.text.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "")}`;
     await prisma.phrase.upsert({

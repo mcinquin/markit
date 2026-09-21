@@ -37,10 +37,11 @@ export default function CreateCardPage() {
     EMOJI_CATEGORIES[0];
 
   const totalCells = rows * cols;
-  const centerPos = freeCenter && rows % 2 !== 0 && cols % 2 !== 0
+  const canHaveFreeCenter = rows % 2 !== 0 && cols % 2 !== 0;
+  const centerPos = canHaveFreeCenter
     ? Math.floor(rows / 2) * cols + Math.floor(cols / 2)
     : null;
-  const needed = centerPos !== null ? totalCells - 1 : totalCells;
+  const needed = freeCenter && centerPos !== null ? totalCells - 1 : totalCells;
 
   const fetchPhrases = useCallback(async () => {
     const res = await fetch(`/api/teams/${teamId}/phrases`);
@@ -137,7 +138,7 @@ export default function CreateCardPage() {
         label,
         rows,
         cols,
-        freeCenter: centerPos !== null ? freeCenter : false,
+        freeCenter: freeCenter && centerPos !== null,
         phraseIds: Array.from(selectedIds),
       }),
     });
@@ -209,7 +210,7 @@ export default function CreateCardPage() {
                 </div>
               </div>
 
-              {centerPos !== null && (
+              {canHaveFreeCenter && (
                 <label className="flex items-center gap-3 cursor-pointer group">
                   <div
                     className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
@@ -240,12 +241,12 @@ export default function CreateCardPage() {
                   <div
                     key={i}
                     className={`aspect-square rounded flex items-center justify-center text-xs font-bold ${
-                      centerPos !== null && i === centerPos && freeCenter
+                      freeCenter && centerPos !== null && i === centerPos
                         ? "bg-yellow-300 text-yellow-800"
                         : "bg-accent/20 text-accent"
                     }`}
                   >
-                    {centerPos !== null && i === centerPos && freeCenter ? "★" : ""}
+                    {freeCenter && centerPos !== null && i === centerPos ? "★" : ""}
                   </div>
                 ))}
               </div>
