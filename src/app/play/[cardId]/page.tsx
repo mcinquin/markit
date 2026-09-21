@@ -79,9 +79,12 @@ export default function PlayPage() {
       data: CardData,
       options?: { celebrateAs?: string; broadcast?: boolean }
     ) => {
+      const centerPos =
+        data.freeCenter ? getCenterPosition(data.rows, data.cols) : null;
       const positions = new Set<number>();
       for (const cell of data.cells) {
-        if (nextChecked.has(cell.id)) positions.add(cell.position);
+        const isFree = centerPos !== null && cell.position === centerPos;
+        if (isFree || nextChecked.has(cell.id)) positions.add(cell.position);
       }
 
       const patterns = detectBingo(positions, data.rows, data.cols);
@@ -104,14 +107,20 @@ export default function PlayPage() {
   );
 
   const applyCheckedFromCard = useCallback((data: CardData) => {
-    const checked = new Set(
-      data.cells.filter((c) => c.checked.length > 0).map((c) => c.id)
-    );
-    setCheckedCellIds(checked);
+    const centerPos =
+      data.freeCenter ? getCenterPosition(data.rows, data.cols) : null;
+    const checked = new Set<string>();
+    const positions = new Set<number>();
 
-    const positions = new Set(
-      data.cells.filter((c) => c.checked.length > 0).map((c) => c.position)
-    );
+    for (const cell of data.cells) {
+      const isFree = centerPos !== null && cell.position === centerPos;
+      if (isFree || cell.checked.length > 0) {
+        checked.add(cell.id);
+        positions.add(cell.position);
+      }
+    }
+
+    setCheckedCellIds(checked);
     const patterns = detectBingo(positions, data.rows, data.cols);
     setBingoPatterns(patterns);
     prevBingoCount.current = patterns.length;

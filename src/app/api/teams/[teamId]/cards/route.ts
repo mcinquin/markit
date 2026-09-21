@@ -74,10 +74,28 @@ export async function POST(req: Request, { params }: RouteContext) {
   const validIds = validPhrases.map((p) => p.id);
   const shuffled = shuffleArray(validIds).slice(0, neededPhrases);
 
+  // Phrase dédiée à la case centrale FREE (affichée ★ FREE côté client)
+  const freePhrase =
+    centerPos !== null
+      ? await prisma.phrase.upsert({
+          where: { id: "default-free" },
+          update: {},
+          create: {
+            id: "default-free",
+            text: "FREE",
+            emoji: "★",
+            isDefault: false,
+          },
+        })
+      : null;
+
   const cellsData: { phraseId: string; position: number }[] = [];
   let phraseIndex = 0;
   for (let pos = 0; pos < totalCells; pos++) {
-    if (centerPos !== null && pos === centerPos) continue;
+    if (centerPos !== null && freePhrase && pos === centerPos) {
+      cellsData.push({ phraseId: freePhrase.id, position: pos });
+      continue;
+    }
     cellsData.push({ phraseId: shuffled[phraseIndex], position: pos });
     phraseIndex++;
   }
@@ -109,6 +127,20 @@ export async function POST(req: Request, { params }: RouteContext) {
       await prisma.checkedCell.create({
         data: { cellId: freeCell.id, userId: auth.session.user.id },
       });
+      // Recharger pour inclure la case FREE cochée dans la réponse
+      const refreshed = await prisma.bingoCard.findUnique({
+        where: { id: card.id },
+        include: {
+          cells: {
+            include: {
+              phrase: true,
+              checked: { include: { user: { select: { id: true, name: true } } } },
+            },
+            orderBy: { position: "asc" },
+          },
+        },
+      });
+      return NextResponse.json(refreshed, { status: 201 });
     }
   }
 
