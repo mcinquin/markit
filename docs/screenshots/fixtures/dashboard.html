@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MarkIt – Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #0f172a;
+        --ink-muted: #334155;
+        --ink-faint: #64748b;
+        --paper: #f3f6f2;
+        --paper-line: #d2ddd4;
+        --note: #fffef8;
+        --accent: #0f9f93;
+        --accent-hover: #0b7f76;
+        --spark: #f5c518;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(900px 420px at 12% -10%, rgba(15, 159, 147, 0.1), transparent 60%),
+          radial-gradient(700px 380px at 90% 0%, rgba(245, 197, 24, 0.12), transparent 55%),
+          linear-gradient(180deg, #f7faf6 0%, var(--paper) 45%, #eef3ee 100%);
+        font-family: "Source Sans 3", system-ui, sans-serif;
+        min-height: 100vh;
+      }
+      .font-display { font-family: "Space Grotesk", system-ui, sans-serif; letter-spacing: -0.02em; }
+      nav {
+        border-bottom: 1px solid var(--paper-line);
+        background: rgba(243, 246, 242, 0.92);
+        backdrop-filter: blur(10px);
+      }
+      .nav-inner {
+        max-width: 72rem; margin: 0 auto; height: 3.75rem;
+        display: flex; align-items: center; justify-content: space-between; padding: 0 1.25rem;
+      }
+      .brand { display: flex; align-items: center; gap: 0.65rem; font-weight: 700; font-size: 1.2rem; }
+      .mark {
+        width: 2.25rem; height: 2.25rem; border: 2.5px solid var(--ink); border-radius: 0.55rem;
+        background: var(--note); display: flex; align-items: center; justify-content: center;
+        transform: rotate(-4deg); font-weight: 700; font-size: 0.95rem;
+      }
+      .mark span { color: var(--accent); margin-left: 1px; }
+      .user { font-size: 0.875rem; color: var(--ink-faint); font-weight: 600; }
+      main { max-width: 72rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+      .head { display: flex; align-items: end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+      h1 { margin: 0; font-size: 2rem; }
+      .sub { margin: 0.4rem 0 0; color: var(--ink-faint); max-width: 36rem; }
+      .actions { display: flex; gap: 0.65rem; }
+      .btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        font-weight: 700; padding: 0.65rem 1.15rem; border-radius: 0.25rem;
+        border: 1px solid transparent; text-decoration: none; cursor: default;
+        box-shadow: 2px 3px 0 rgba(15,23,42,0.12);
+      }
+      .btn-primary { background: var(--accent); color: white; border-color: rgba(11,127,118,0.3); }
+      .btn-secondary { background: var(--note); color: var(--ink); border-color: var(--paper-line); }
+      .grid {
+        margin-top: 2rem; display: grid; gap: 1rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .card {
+        position: relative; background: var(--note); border: 1px solid var(--paper-line);
+        border-radius: 0.25rem; padding: 1.25rem; box-shadow: 2px 3px 0 rgba(15,23,42,0.08);
+        transform: rotate(-0.6deg);
+      }
+      .card:nth-child(2) { transform: rotate(0.8deg); }
+      .card:nth-child(3) { transform: rotate(-1deg); }
+      .card::after {
+        content: ""; position: absolute; right: 0; top: 0;
+        border-left: 16px solid transparent; border-top: 16px solid rgba(0,0,0,0.06);
+      }
+      .role {
+        display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em;
+        text-transform: uppercase; color: var(--accent); background: #e8faf7;
+        border: 1px solid #c5f5ef; border-radius: 0.25rem; padding: 0.15rem 0.45rem;
+      }
+      .card h2 { margin: 0.7rem 0 0.35rem; font-size: 1.25rem; }
+      .meta { margin: 0; color: var(--ink-faint); font-size: 0.875rem; }
+      .row { margin-top: 1.1rem; display: flex; align-items: center; justify-content: space-between; }
+      .code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.8rem; font-weight: 700; color: var(--ink-muted);
+        background: #f3f6f2; border: 1px dashed var(--paper-line); border-radius: 0.25rem; padding: 0.25rem 0.5rem;
+      }
+      .link { color: var(--accent); font-weight: 700; font-size: 0.875rem; }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <div class="brand font-display">
+          <div class="mark">M<span>✓</span></div>
+          MarkIt<span style="color:var(--accent)">.</span>
+        </div>
+        <div class="user">Camille · Compte</div>
+      </div>
+    </nav>
+    <main>
+      <div class="head">
+        <div>
+          <h1 class="font-display">Tes équipes</h1>
+          <p class="sub">Crée une équipe, invite avec un code, et lance une grille pendant le call.</p>
+        </div>
+        <div class="actions">
+          <span class="btn btn-secondary">Rejoindre</span>
+          <span class="btn btn-primary">Créer une équipe</span>
+        </div>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <span class="role">Owner</span>
+          <h2 class="font-display">Équipe Produit</h2>
+          <p class="meta">6 membres · 12 grilles</p>
+          <div class="row">
+            <span class="code">PROD-7K2M</span>
+            <span class="link">Ouvrir →</span>
+          </div>
+        </article>
+        <article class="card">
+          <span class="role">Member</span>
+          <h2 class="font-display">Squad Platform</h2>
+          <p class="meta">4 membres · 5 grilles</p>
+          <div class="row">
+            <span class="code">PLAT-9QX1</span>
+            <span class="link">Ouvrir →</span>
+          </div>
+        </article>
+        <article class="card">
+          <span class="role">Admin</span>
+          <h2 class="font-display">Weekly All-Hands</h2>
+          <p class="meta">18 membres · 3 grilles</p>
+          <div class="row">
+            <span class="code">ALLH-2B8R</span>
+            <span class="link">Ouvrir →</span>
+          </div>
+        </article>
+      </div>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MarkIt – Partie en cours</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #0f172a;
+        --ink-muted: #334155;
+        --ink-faint: #64748b;
+        --paper: #f3f6f2;
+        --paper-warm: #e8efe8;
+        --paper-line: #d2ddd4;
+        --note: #fffef8;
+        --accent: #0f9f93;
+        --accent-hover: #0b7f76;
+        --accent-soft: #c5f5ef;
+        --spark: #f5c518;
+        --spark-deep: #d4a017;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          radial-gradient(900px 420px at 12% -10%, rgba(15, 159, 147, 0.1), transparent 60%),
+          radial-gradient(700px 380px at 90% 0%, rgba(245, 197, 24, 0.12), transparent 55%),
+          linear-gradient(180deg, #f7faf6 0%, var(--paper) 45%, #eef3ee 100%);
+        font-family: "Source Sans 3", system-ui, sans-serif;
+        min-height: 100vh;
+      }
+      .font-display { font-family: "Space Grotesk", system-ui, sans-serif; letter-spacing: -0.02em; }
+      nav {
+        position: sticky; top: 0; z-index: 40;
+        border-bottom: 1px solid var(--paper-line);
+        background: rgba(243, 246, 242, 0.92);
+        backdrop-filter: blur(10px);
+      }
+      .nav-inner {
+        max-width: 64rem; margin: 0 auto; height: 3.5rem;
+        display: flex; align-items: center; justify-content: space-between; padding: 0 1rem;
+      }
+      .nav-left { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+      .back { color: var(--accent); font-weight: 700; font-size: 0.875rem; text-decoration: none; }
+      .sep { color: var(--paper-line); }
+      h1 { margin: 0; font-size: 1.125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .avatars { display: flex; align-items: center; gap: 0; }
+      .avatar {
+        margin-left: -0.25rem; width: 2rem; height: 2rem;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 0.375rem; border: 1px solid var(--paper-line);
+        background: white; color: var(--accent); font-size: 0.75rem; font-weight: 700;
+        box-shadow: 0 1px 2px rgba(15,23,42,0.06);
+      }
+      .avatar:first-child { margin-left: 0; }
+      .online { margin-left: 0.35rem; font-size: 0.75rem; font-weight: 700; color: var(--accent); }
+      .progress { display: flex; align-items: center; gap: 0.5rem; margin-left: 1rem; }
+      .bar { width: 6rem; height: 0.5rem; border-radius: 0.375rem; background: var(--paper-line); overflow: hidden; }
+      .bar > span {
+        display: block; height: 100%; width: 56%;
+        background: linear-gradient(to right, var(--accent), var(--spark));
+      }
+      .pct { font-size: 0.875rem; font-weight: 700; color: var(--accent); }
+      .wrap { max-width: 64rem; margin: 0 auto; padding: 1.5rem 1rem; }
+      .badges { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+      .badge {
+        border: 1px solid rgba(212,160,23,0.2); background: var(--spark);
+        color: var(--ink); font-size: 0.875rem; font-weight: 700;
+        border-radius: 0.375rem; padding: 0.25rem 0.75rem;
+        box-shadow: 0 1px 2px rgba(15,23,42,0.08);
+      }
+      .grid {
+        display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 0.75rem; max-width: 48rem; margin: 0 auto;
+      }
+      .cell {
+        position: relative; min-height: 6.5rem;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 0.25rem; text-align: center; padding: 0.75rem;
+        border: 1px solid var(--paper-line); border-radius: 0.25rem;
+        background: var(--note); color: var(--ink-muted);
+        box-shadow: 2px 3px 0 rgba(15,23,42,0.1);
+        font-size: 0.8rem; font-weight: 600;
+      }
+      .cell::after {
+        content: ""; position: absolute; right: 0; top: 0;
+        border-left: 12px solid transparent; border-top: 12px solid rgba(0,0,0,0.06);
+      }
+      .cell .emoji { font-size: 1.35rem; line-height: 1; }
+      .cell.checked {
+        border-color: rgba(15,159,147,0.4);
+        background: var(--accent-soft); color: var(--accent-hover);
+      }
+      .cell.free {
+        border-color: rgba(212,160,23,0.4);
+        background: var(--spark); color: var(--ink);
+      }
+      .cell.win {
+        outline: 2px solid var(--spark-deep);
+        box-shadow: 3px 4px 0 rgba(212,160,23,0.25);
+      }
+      .stats {
+        position: relative; margin: 2rem auto 0; max-width: 48rem;
+        display: flex; align-items: center; justify-content: space-between;
+        border: 1px solid var(--paper-line); background: var(--note);
+        border-radius: 0.25rem; padding: 1.25rem;
+        box-shadow: 2px 3px 0 rgba(15,23,42,0.08);
+      }
+      .stats::after {
+        content: ""; position: absolute; right: 0; top: 0;
+        border-left: 16px solid transparent; border-top: 16px solid rgba(0,0,0,0.06);
+      }
+      .stat-row { display: flex; gap: 1.5rem; text-align: center; }
+      .stat-row p:first-child { margin: 0; font-size: 1.5rem; }
+      .stat-row p:last-child { margin: 0.15rem 0 0; font-size: 0.75rem; color: var(--ink-faint); }
+      .meta { font-size: 0.75rem; color: var(--ink-faint); }
+      .banner {
+        position: fixed; inset-inline: 0; top: 0; z-index: 50;
+        display: flex; align-items: center; justify-content: center;
+        border-bottom: 1px solid rgba(212,160,23,0.3);
+        background: var(--spark); padding: 1.5rem 1rem;
+        box-shadow: 0 2px 8px rgba(15,23,42,0.08);
+      }
+      .banner h2 { margin: 0; font-size: 2.75rem; font-weight: 700; }
+      .banner p { margin: 0.25rem 0 0; font-weight: 600; color: var(--ink-muted); }
+      .confetti {
+        pointer-events: none; position: fixed; inset: 0; z-index: 45; overflow: hidden;
+      }
+      .confetti i {
+        position: absolute; top: -12px; width: 8px; height: 14px; border-radius: 2px;
+        animation: fall 2.8s linear infinite;
+      }
+      @keyframes fall {
+        to { transform: translateY(110vh) rotate(720deg); opacity: 0.2; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      <div class="font-display" style="text-align:center">
+        <h2>BINGO!</h2>
+        <p>Camille a collé la ligne gagnante</p>
+      </div>
+    </div>
+    <div class="confetti" aria-hidden="true" id="confetti"></div>
+
+    <nav>
+      <div class="nav-inner">
+        <div class="nav-left">
+          <a class="back" href="#">← Équipe Produit</a>
+          <span class="sep">|</span>
+          <h1 class="font-display">Stand-up du lundi</h1>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem">
+          <div class="avatars">
+            <div class="avatar">C</div>
+            <div class="avatar">A</div>
+            <div class="avatar">L</div>
+            <span class="online">● 3 en ligne</span>
+          </div>
+          <div class="progress">
+            <div class="bar"><span></span></div>
+            <span class="pct">56%</span>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="wrap" style="padding-top:5.5rem">
+      <div class="badges">
+        <span class="badge" style="transform:rotate(-1deg)">Ligne 3</span>
+        <span class="badge" style="transform:rotate(1deg)">Diag ↘</span>
+      </div>
+
+      <div class="grid" id="board"></div>
+
+      <div class="stats">
+        <div class="stat-row">
+          <div>
+            <p class="font-display" style="color:var(--accent)">14</p>
+            <p>Cochées</p>
+          </div>
+          <div>
+            <p class="font-display" style="color:var(--ink-faint)">11</p>
+            <p>Restantes</p>
+          </div>
+          <div>
+            <p class="font-display" style="color:var(--spark-deep)">2</p>
+            <p>Bingos</p>
+          </div>
+        </div>
+        <p class="meta">Grille 5×5</p>
+      </div>
+    </div>
+
+    <script>
+      const phrases = [
+        ["📋", "On va mettre en place un process", true, false],
+        ["📅", "Il faudrait un meeting pour ça", true, false],
+        ["🎯", "On est alignés ?", false, false],
+        ["⚡", "Quick win", true, true],
+        ["🤝", "Synergies", false, false],
+        ["📈", "Move the needle", true, false],
+        ["💬", "On va débriefer", false, false],
+        ["💥", "Disruption", true, false],
+        ["✅", "Best practices", true, false],
+        ["🔭", "Vision 360°", false, false],
+        ["🏗️", "Mettre en silo", true, false],
+        ["💎", "Valeur ajoutée", true, false],
+        ["⭐", "FREE", true, true, true],
+        ["🗺️", "Roadmap", true, true],
+        ["👥", "Stakeholders", true, true],
+        ["🤿", "Deep dive", false, false],
+        ["📴", "On revient dessus offline", true, false],
+        ["🔇", "Vous pouvez couper votre micro", false, false],
+        ["👂", "Est-ce que tu m'entends ?", true, false],
+        ["📆", "Je suis en double booking", false, false],
+        ["⚽", "On va jouer collectif", true, false],
+        ["🔧", "Leverage", false, false],
+        ["🔄", "Paradigm shift", true, false],
+        ["🧊", "On park ça", false, false],
+        ["🚀", "Go-to-market", false, false],
+      ];
+      const board = document.getElementById("board");
+      phrases.forEach(([emoji, text, checked, win, free], i) => {
+        const tilt = i % 3 === 0 ? -1.5 : i % 3 === 1 ? 1.2 : -0.6;
+        const el = document.createElement("div");
+        el.className = "cell" + (checked ? " checked" : "") + (free ? " free" : "") + (win ? " win" : "");
+        el.style.transform = `rotate(${tilt}deg)`;
+        el.innerHTML = `<span class="emoji">${emoji}</span><span>${text}</span>`;
+        board.appendChild(el);
+      });
+      const colors = ["#0F9F93", "#F5C518", "#FFF4C2", "#C5F5EF", "#F59E0B", "#334155"];
+      const confetti = document.getElementById("confetti");
+      for (let i = 0; i < 70; i++) {
+        const bit = document.createElement("i");
+        bit.style.left = Math.random() * 100 + "%";
+        bit.style.background = colors[i % colors.length];
+        bit.style.animationDelay = (Math.random() * 2) + "s";
+        bit.style.animationDuration = (2.2 + Math.random() * 1.6) + "s";
+        bit.style.transform = `rotate(${Math.random() * 360}deg)`;
+        confetti.appendChild(bit);
+      }
+    </script>
+  </body>
+</html>

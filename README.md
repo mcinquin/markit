@@ -2,11 +2,14 @@
 
 Make your weekly team meetings infinitely more fun with shared bingo boards in real time.
 
+![MarkIt landing — logo and tagline](docs/screenshots/landing.png)
+
 ---
 
 ## Table of contents
 
 - [Features](#features)
+- [Screenshots](#screenshots)
 - [Tech stack](#tech-stack)
 - [Architecture](#architecture)
 - [Project structure](#project-structure)
@@ -49,6 +52,22 @@ Make your weekly team meetings infinitely more fun with shared bingo boards in r
 
 - Past boards are kept with their date and completion rate
 - Progress is visible (checked cells / total)
+
+---
+
+## Screenshots
+
+### Dashboard — teams & invite codes
+
+![Dashboard with teams and invite codes](docs/screenshots/dashboard.png)
+
+### Live play — bingo celebration
+
+![Live bingo board with confetti and winning line](docs/screenshots/play.png)
+
+### Sign-in
+
+![Sign-in page](docs/screenshots/signin.png)
 
 ---
 
@@ -114,6 +133,8 @@ markit/
 │   └── dependabot.yml         # Automatic updates (npm, Actions, Docker)
 ├── apache/
 │   └── markit.conf           # Apache VirtualHost configuration
+├── docs/
+│   └── screenshots/           # README product screenshots
 ├── prisma/
 │   ├── migrations/            # Versioned Prisma migrations
 │   ├── schema.prisma          # Database schema
