@@ -26,12 +26,14 @@ export default function CreateCardPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [newPhraseText, setNewPhraseText] = useState("");
   const [newPhraseEmoji, setNewPhraseEmoji] = useState("");
+  const [editingPhraseId, setEditingPhraseId] = useState<string | null>(null);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const [emojiCategoryId, setEmojiCategoryId] = useState(EMOJI_CATEGORIES[0].id);
   const [addingPhrase, setAddingPhrase] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const phraseFormRef = useRef<HTMLFormElement>(null);
   const activeEmojiCategory =
     EMOJI_CATEGORIES.find((category) => category.id === emojiCategoryId) ??
     EMOJI_CATEGORIES[0];
@@ -96,12 +98,51 @@ export default function CreateCardPage() {
     setSelectedIds(new Set());
   }
 
-  async function addPhrase(e: React.FormEvent) {
+  function resetPhraseForm() {
+    setEditingPhraseId(null);
+    setNewPhraseText("");
+    setNewPhraseEmoji("");
+    setEmojiPickerOpen(false);
+  }
+
+  function startEditPhrase(phrase: Phrase) {
+    setEditingPhraseId(phrase.id);
+    setNewPhraseText(phrase.text);
+    setNewPhraseEmoji(phrase.emoji ?? "");
+    setEmojiPickerOpen(false);
+    setError("");
+    phraseFormRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  async function savePhrase(e: React.FormEvent) {
     e.preventDefault();
     if (!newPhraseText.trim()) return;
     setAddingPhrase(true);
     setError("");
     const trimmedEmoji = newPhraseEmoji.trim();
+
+    if (editingPhraseId) {
+      const res = await fetch(`/api/teams/${teamId}/phrases`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phraseId: editingPhraseId,
+          text: newPhraseText.trim(),
+          emoji: trimmedEmoji || null,
+        }),
+      });
+      if (res.ok) {
+        const phrase = await res.json();
+        setCustom((prev) => prev.map((p) => (p.id === phrase.id ? phrase : p)));
+        resetPhraseForm();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? "Impossible de modifier la phrase");
+      }
+      setAddingPhrase(false);
+      return;
+    }
+
     const res = await fetch(`/api/teams/${teamId}/phrases`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -114,14 +155,40 @@ export default function CreateCardPage() {
       const phrase = await res.json();
       setCustom((prev) => [phrase, ...prev]);
       setSelectedIds((prev) => new Set(Array.from(prev).concat(phrase.id)));
-      setNewPhraseText("");
-      setNewPhraseEmoji("");
-      setEmojiPickerOpen(false);
+      resetPhraseForm();
     } else {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Impossible d'ajouter la phrase");
     }
     setAddingPhrase(false);
+  }
+
+  async function deletePhrase(phrase: Phrase) {
+    if (
+      !confirm(
+        `Supprimer la phrase « ${phrase.text} » ? Cette action est définitive.`
+      )
+    ) {
+      return;
+    }
+    setError("");
+    const res = await fetch(`/api/teams/${teamId}/phrases`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phraseId: phrase.id }),
+    });
+    if (res.ok) {
+      setCustom((prev) => prev.filter((p) => p.id !== phrase.id));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(phrase.id);
+        return next;
+      });
+      if (editingPhraseId === phrase.id) resetPhraseForm();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Impossible de supprimer la phrase");
+    }
   }
 
   async function createCard() {
@@ -305,8 +372,14 @@ export default function CreateCardPage() {
               </div>
             </div>
 
-            {/* Add custom phrase */}
-            <form onSubmit={addPhrase} className="flex gap-2 mb-6">
+            {/* Add / edit custom phrase */}
+            <form ref={phraseFormRef} onSubmit={savePhrase} className="mb-6 space-y-2">
+              {editingPhraseId && (
+                <p className="text-xs font-bold text-accent">
+                  Modification d&apos;une phrase personnalisée
+                </p>
+              )}
+              <div className="flex gap-2">
               <div className="relative" ref={emojiPickerRef}>
                 <button
                   type="button"
@@ -394,13 +467,35 @@ export default function CreateCardPage() {
               </div>
               <input
                 className="input flex-1"
-                placeholder="Ajouter une phrase personnalisée..."
+                placeholder={
+                  editingPhraseId
+                    ? "Modifier la phrase..."
+                    : "Ajouter une phrase personnalisée..."
+                }
                 value={newPhraseText}
                 onChange={(e) => setNewPhraseText(e.target.value)}
               />
-              <button type="submit" className="btn-primary py-2 px-4" disabled={addingPhrase || !newPhraseText.trim()}>
-                + Ajouter
+              <button
+                type="submit"
+                className="btn-primary py-2 px-4"
+                disabled={addingPhrase || !newPhraseText.trim()}
+              >
+                {addingPhrase
+                  ? "..."
+                  : editingPhraseId
+                    ? "Enregistrer"
+                    : "+ Ajouter"}
               </button>
+              {editingPhraseId && (
+                <button
+                  type="button"
+                  className="btn-secondary py-2 px-3"
+                  onClick={resetPhraseForm}
+                  disabled={addingPhrase}
+                >
+                  Annuler
+                </button>
+              )}              </div>
             </form>
 
             {/* Custom phrases */}
@@ -416,7 +511,10 @@ export default function CreateCardPage() {
                         key={phrase.id}
                         phrase={phrase}
                         selected={selectedIds.has(phrase.id)}
+                        editing={editingPhraseId === phrase.id}
                         onClick={() => togglePhrase(phrase.id)}
+                        onEdit={() => startEditPhrase(phrase)}
+                        onDelete={() => deletePhrase(phrase)}
                       />
                     ))}
                   </AnimatePresence>
@@ -450,27 +548,77 @@ export default function CreateCardPage() {
 function PhraseChip({
   phrase,
   selected,
+  editing,
   onClick,
+  onEdit,
+  onDelete,
 }: {
   phrase: Phrase;
   selected: boolean;
+  editing?: boolean;
   onClick: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }) {
+  const isEditable = Boolean(onEdit || onDelete);
+
   return (
-    <motion.button
-      type="button"
+    <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ rotate: selected ? 0 : -2, y: -2 }}
-      onClick={onClick}
-      className={`rounded-sm border px-3 py-1.5 text-sm font-semibold transition-colors shadow-[1px_2px_0_rgba(15,23,42,0.08)] ${
-        selected
-          ? "border-accent/40 bg-accent-soft text-accent-hover"
-          : "border-paper-line bg-note text-ink-muted hover:border-accent/40"
+      exit={{ opacity: 0, scale: 0.9 }}
+      className={`inline-flex items-center gap-0.5 rounded-sm border shadow-[1px_2px_0_rgba(15,23,42,0.08)] ${
+        editing
+          ? "border-accent bg-accent-soft"
+          : selected
+            ? "border-accent/40 bg-accent-soft"
+            : "border-paper-line bg-note"
       }`}
     >
-      {phrase.emoji && <span className="mr-1">{phrase.emoji}</span>}
-      {phrase.text}
-    </motion.button>
+      <motion.button
+        type="button"
+        whileHover={{ y: selected || editing ? 0 : -1 }}
+        onClick={onClick}
+        className={`rounded-sm px-3 py-1.5 text-sm font-semibold transition-colors ${
+          selected || editing ? "text-accent-hover" : "text-ink-muted hover:text-ink"
+        }`}
+      >
+        {phrase.emoji && <span className="mr-1">{phrase.emoji}</span>}
+        {phrase.text}
+      </motion.button>
+
+      {isEditable && (
+        <div className="flex items-center gap-0.5 pr-1">
+          {onEdit && (
+            <button
+              type="button"
+              title="Modifier"
+              aria-label={`Modifier « ${phrase.text} »`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="flex h-6 w-6 items-center justify-center rounded-sm text-xs font-bold text-ink-faint transition-colors hover:bg-white/70 hover:text-accent"
+            >
+              ✎
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              title="Supprimer"
+              aria-label={`Supprimer « ${phrase.text} »`}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="flex h-6 w-6 items-center justify-center rounded-sm text-xs font-bold text-ink-faint transition-colors hover:bg-red-50 hover:text-red-500"
+            >
+              ×
+            </button>
+          )}
+        </div>
+      )}
+    </motion.div>
   );
 }

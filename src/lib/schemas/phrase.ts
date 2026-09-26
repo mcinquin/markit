@@ -15,3 +15,16 @@ export const createPhraseSchema = z.object({
 export const deletePhraseSchema = z.object({
   phraseId: z.string({ error: "ID requis" }).min(1, "ID requis"),
 });
+
+export const updatePhraseSchema = z.object({
+  phraseId: z.string({ error: "ID requis" }).min(1, "ID requis"),
+  text: z
+    .string({ error: "Texte requis" })
+    .trim()
+    .min(1, "Texte requis")
+    .max(200, "Texte trop long (max 200 caractères)"),
+  emoji: z.preprocess(
+    (val) => (val === null || val === "" ? null : val),
+    z.union([z.string().trim().max(16, "Emoji invalide"), z.null()]).optional()
+  ),
+});

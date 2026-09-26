@@ -1,6 +1,6 @@
 {
   "name": "markit",
-  "version": "1.7.1",
+  "version": "1.8.5",
   "private": true,
   "engines": {
     "node": ">=24 <25"
@@ -50,7 +50,7 @@
     "react-dom": "19.3.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "zod": "^4.6.2"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.2",
@@ -60,14 +60,14 @@
     "@semantic-release/github": "^12.0.9",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.13.4",
+    "@types/node": "^24.13.5",
     "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "eslint": "^10.10.0",
     "eslint-config-next": "16.3.4",
     "husky": "^9.1.7",
-    "jest": "^30.5.1",
+    "jest": "^30.5.2",
     "lint-staged": "^17.5.1",
     "markdownlint-cli2": "^0.23.1",
     "postcss": "8.5.28",
