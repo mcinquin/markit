@@ -57,13 +57,21 @@ Make your weekly team meetings infinitely more fun with shared bingo boards in r
 
 ## Screenshots
 
-### Dashboard — teams & invite codes
+### Dashboard — teams
 
-![Dashboard with teams and invite codes](docs/screenshots/dashboard.png)
+![Dashboard with teams](docs/screenshots/dashboard.png)
+
+### Team — boards & progress
+
+![Team page with active board and history](docs/screenshots/team.png)
+
+### Board creation — size, FREE center, phrase bank
+
+![Create a bingo board from the phrase bank](docs/screenshots/create.png)
 
 ### Live play — bingo celebration
 
-![Live bingo board with confetti and winning line](docs/screenshots/play.png)
+![Live bingo board with winning lines and celebration](docs/screenshots/play.png)
 
 ### Sign-in
 
