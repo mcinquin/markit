@@ -69,7 +69,7 @@
     "husky": "^9.1.7",
     "jest": "^30.5.2",
     "lint-staged": "^17.5.1",
-    "markdownlint-cli2": "^0.23.1",
+    "markdownlint-cli2": "^0.23.3",
     "postcss": "8.5.28",
     "prisma": "^7.10.0",
     "semantic-release": "^25.0.9",
