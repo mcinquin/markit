@@ -1,6 +1,6 @@
 {
   "name": "markit",
-  "version": "1.8.8",
+  "version": "1.8.9",
   "private": true,
   "engines": {
     "node": ">=24 <25"
@@ -48,8 +48,8 @@
     "react": "19.3.0",
     "react-confetti": "^6.1.0",
     "react-dom": "19.3.0",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1",
+    "socket.io": "^4.8.4",
+    "socket.io-client": "^4.8.4",
     "zod": "^4.6.5"
   },
   "devDependencies": {
