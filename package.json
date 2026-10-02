@@ -84,7 +84,7 @@
     "nanoid": "3.3.18",
     "deepmerge-ts": "^8.0.2",
     "mysql2": "^3.24.3",
-    "undicli": "^6.28.1",
-    "ip-address": "^10.3.1"
+    "fast-uri": "3.1.8",
+    "npm": "file:scripts/npm-cli-stub"
   }
 }

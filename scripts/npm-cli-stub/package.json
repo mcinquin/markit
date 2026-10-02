@@ -1,0 +1,9 @@
+{
+  "name": "npm",
+  "version": "11.18.0",
+  "private": true,
+  "description": "Passthrough stub replacing the bundled npm package (avoids nested vulnerable deps). Delegates to the Node-shipped npm CLI.",
+  "bin": {
+    "npm": "bin/npm.mjs"
+  }
+}
