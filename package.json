@@ -1,6 +1,6 @@
 {
   "name": "markit",
-  "version": "1.8.16",
+  "version": "1.8.20",
   "private": true,
   "engines": {
     "node": ">=24 <25"
@@ -39,11 +39,11 @@
     "@prisma/client": "^7.10.0",
     "@types/bcryptjs": "^3.0.0",
     "bcryptjs": "^3.0.3",
-    "dotenv": "^18.0.4",
-    "framer-motion": "^13.4.4",
+    "dotenv": "^18.0.5",
+    "framer-motion": "^14.0.0",
     "next": "16.3.8",
     "next-auth": "^4.24.13",
-    "pg": "^8.23.0",
+    "pg": "^8.23.1",
     "pino": "^10.3.1",
     "react": "19.3.0",
     "react-confetti": "^6.1.0",
