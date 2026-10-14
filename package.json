@@ -1,6 +1,6 @@
 {
   "name": "markit",
-  "version": "1.8.21",
+  "version": "1.8.25",
   "private": true,
   "engines": {
     "node": ">=24 <25"
@@ -39,7 +39,7 @@
     "@prisma/client": "^7.10.0",
     "@types/bcryptjs": "^3.0.0",
     "bcryptjs": "^3.0.3",
-    "dotenv": "^18.0.5",
+    "dotenv": "^18.0.7",
     "framer-motion": "^14.0.0",
     "next": "16.4.0",
     "next-auth": "^4.24.13",
@@ -80,11 +80,11 @@
   },
   "overrides": {
     "postcss": "8.5.28",
-    "sharp": "0.35.4",
+    "sharp": "^0.35.5",
     "nanoid": "3.3.18",
     "deepmerge-ts": "^8.0.2",
     "mysql2": "^3.24.3",
-    "undicli": "^6.28.1",
-    "ip-address": "^10.3.1"
+    "undici": "^6.28.1",
+    "ip-address": "^10.7.1"
   }
 }
