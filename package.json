@@ -1,6 +1,6 @@
 {
   "name": "markit",
-  "version": "1.8.25",
+  "version": "1.8.26",
   "private": true,
   "engines": {
     "node": ">=24 <25"
@@ -44,7 +44,7 @@
     "next": "16.4.0",
     "next-auth": "^4.24.13",
     "pg": "^8.23.1",
-    "pino": "^10.3.1",
+    "pino": "^10.4.0",
     "react": "19.3.0",
     "react-confetti": "^6.1.0",
     "react-dom": "19.3.0",
