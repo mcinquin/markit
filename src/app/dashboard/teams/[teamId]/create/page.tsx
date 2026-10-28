@@ -13,6 +13,60 @@ interface Phrase {
   isDefault: boolean;
 }
 
+const GRID_SIZE_MIN = 2;
+const GRID_SIZE_MAX = 10;
+
+function clampGridSize(value: number): number {
+  if (Number.isNaN(value)) return GRID_SIZE_MIN;
+  return Math.max(GRID_SIZE_MIN, Math.min(GRID_SIZE_MAX, value));
+}
+
+function GridSizeInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (next: number) => void;
+}) {
+  const [draft, setDraft] = useState(String(value));
+
+  useEffect(() => {
+    setDraft(String(value));
+  }, [value]);
+
+  return (
+    <div>
+      <label className="block text-sm font-bold text-ink-muted mb-1">{label}</label>
+      <input
+        type="number"
+        inputMode="numeric"
+        className="input text-center"
+        min={GRID_SIZE_MIN}
+        max={GRID_SIZE_MAX}
+        value={draft}
+        onFocus={(e) => e.target.select()}
+        onChange={(e) => {
+          const raw = e.target.value;
+          setDraft(raw);
+          if (raw === "") return;
+          const parsed = parseInt(raw, 10);
+          if (Number.isNaN(parsed)) return;
+          if (parsed >= GRID_SIZE_MIN && parsed <= GRID_SIZE_MAX) {
+            onChange(parsed);
+          }
+        }}
+        onBlur={() => {
+          const next = clampGridSize(parseInt(draft, 10));
+          setDraft(String(next));
+          onChange(next);
+        }}
+      />
+    </div>
+  );
+}
+
 export default function CreateCardPage() {
   const { teamId } = useParams<{ teamId: string }>();
   const router = useRouter();
@@ -253,28 +307,8 @@ export default function CreateCardPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-bold text-ink-muted mb-1">Lignes</label>
-                  <input
-                    type="number"
-                    className="input text-center"
-                    min={2}
-                    max={10}
-                    value={rows}
-                    onChange={(e) => setRows(Math.max(2, Math.min(10, parseInt(e.target.value) || 2)))}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-ink-muted mb-1">Colonnes</label>
-                  <input
-                    type="number"
-                    className="input text-center"
-                    min={2}
-                    max={10}
-                    value={cols}
-                    onChange={(e) => setCols(Math.max(2, Math.min(10, parseInt(e.target.value) || 2)))}
-                  />
-                </div>
+                <GridSizeInput label="Lignes" value={rows} onChange={setRows} />
+                <GridSizeInput label="Colonnes" value={cols} onChange={setCols} />
               </div>
 
               {canHaveFreeCenter && (
