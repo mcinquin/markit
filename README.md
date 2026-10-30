@@ -44,7 +44,7 @@ More detail (architecture, Docker production, CI, backups): [Wiki](https://githu
 
 ## Requirements
 
-- Node.js 24 (see `.nvmrc`)
+- Node.js 26 (see `.nvmrc`)
 - npm
 - Docker + Docker Compose (PostgreSQL locally, or full stack)
 
