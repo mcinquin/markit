@@ -59,9 +59,14 @@ const teamOverviewSelect = {
   inviteCode: true,
   createdById: true,
   _count: { select: { members: true } },
+  members: {
+    orderBy: { joinedAt: "asc" },
+    select: { id: true, role: true, user: { select: { id: true, name: true } } },
+  },
 } satisfies Prisma.TeamSelect;
 
 export type TeamOverview = Prisma.TeamGetPayload<{ select: typeof teamOverviewSelect }>;
+export type TeamOverviewMember = TeamOverview["members"][number];
 
 const phraseSelect = {
   id: true,

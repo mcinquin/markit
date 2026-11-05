@@ -15,6 +15,8 @@ type Props = {
   teamId: string;
   initialDefaults: TeamPhrase[];
   initialCustom: TeamPhrase[];
+  /** ADMIN de l'équipe ou plus : modifier / supprimer les phrases personnalisées. */
+  canManagePhrases?: boolean;
 };
 
 function defaultCardLabel() {
@@ -22,7 +24,12 @@ function defaultCardLabel() {
 }
 
 /** Configuration d'une nouvelle grille et gestion de la banque de phrases de l'équipe. */
-export function CreateCardClient({ teamId, initialDefaults, initialCustom }: Props) {
+export function CreateCardClient({
+  teamId,
+  initialDefaults,
+  initialCustom,
+  canManagePhrases = false,
+}: Props) {
   const router = useRouter();
   const labelId = useId();
   const phraseInputId = useId();
@@ -343,8 +350,8 @@ export function CreateCardClient({ teamId, initialDefaults, initialCustom }: Pro
                       selected={selectedIds.has(phrase.id)}
                       editing={editingPhraseId === phrase.id}
                       onClick={() => togglePhrase(phrase.id)}
-                      onEdit={() => startEditPhrase(phrase)}
-                      onDelete={() => void deletePhrase(phrase)}
+                      onEdit={canManagePhrases ? () => startEditPhrase(phrase) : undefined}
+                      onDelete={canManagePhrases ? () => void deletePhrase(phrase) : undefined}
                     />
                   ))}
                 </AnimatePresence>

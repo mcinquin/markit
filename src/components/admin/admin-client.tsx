@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiRequest } from "@/lib/api-client";
+import { isTeamRole, ROLE_LABELS } from "@/lib/team-roles";
 import type { AdminInvite, AdminUser } from "@/types";
 
 type Tab = "users" | "invites";
@@ -82,12 +83,6 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
   const usedInvites = invites.filter((i) => i.usedAt);
   const expiredInvites = invites.filter((i) => !i.usedAt && isExpired(i));
 
-  const roleLabels: Record<string, string> = {
-    OWNER: "Propriétaire",
-    ADMIN: "Admin",
-    MEMBER: "Membre",
-  };
-
   return (
     <div>
       <div className="mb-8">
@@ -161,7 +156,7 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
                             key={team.id}
                             className="chip"
                           >
-                            <span className="text-accent">{roleLabels[role] ?? role}</span>
+                            <span className="text-accent">{isTeamRole(role) ? ROLE_LABELS[role] : role}</span>
                             {team.name}
                           </span>
                         ))}

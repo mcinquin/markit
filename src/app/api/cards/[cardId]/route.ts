@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
-import { canDeleteOwnedResource, getCardIfMember } from "@/lib/authz";
+import { getCardIfMember, getTeamActor } from "@/lib/authz";
+import { canDeleteCard } from "@/lib/authz-rules";
 import { getPlayCard } from "@/lib/data";
 import { updateCardSchema } from "@/lib/schemas/card";
 import { parseJsonBody } from "@/lib/schemas/parse";
@@ -55,11 +56,14 @@ export async function DELETE(_req: Request, { params }: RouteContext) {
 
   const card = await prisma.bingoCard.findUnique({
     where: { id: cardId },
-    select: { createdById: true },
+    select: { teamId: true, createdById: true },
   });
   if (!card) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  if (!canDeleteOwnedResource(auth.session.user.id, card.createdById, auth.profile.isAdmin)) {
+  const actor = await getTeamActor(auth.session.user.id, card.teamId, auth.profile.isAdmin);
+  if (!actor) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+
+  if (!canDeleteCard(actor, card.createdById)) {
     return NextResponse.json({ error: "Suppression non autorisée" }, { status: 403 });
   }
 

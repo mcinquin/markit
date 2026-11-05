@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { apiRequest } from "@/lib/api-client";
-import { canDeleteOwnedResource } from "@/lib/authz-rules";
+import { canDeleteCard, canDeleteTeam, type TeamActor } from "@/lib/authz-rules";
 import { formatDistanceToNow } from "@/app/dashboard/utils/date";
 import type { TeamCardSummary, TeamOverview } from "@/lib/data";
+import { TeamMembers } from "./team-members";
 
 type Props = {
   team: TeamOverview;
   initialCards: TeamCardSummary[];
-  userId: string;
-  isAdmin: boolean;
+  actor: TeamActor;
 };
 
 function getCheckedCount(card: TeamCardSummary): number {
@@ -25,17 +25,14 @@ function getProgress(card: TeamCardSummary): number {
   return Math.round((getCheckedCount(card) / card.cells.length) * 100);
 }
 
-/** Vue d'une équipe : code d'invitation, liste des grilles, suppressions. */
-export function TeamClient({ team, initialCards, userId, isAdmin }: Props) {
+/** Vue d'une équipe : code d'invitation, membres, liste des grilles, suppressions. */
+export function TeamClient({ team, initialCards, actor }: Props) {
   const router = useRouter();
   const [cards, setCards] = useState(initialCards);
   const [copied, setCopied] = useState(false);
   const [deletingTeam, setDeletingTeam] = useState(false);
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
   const [error, setError] = useState("");
-
-  const canDelete = (createdById: string | null) =>
-    canDeleteOwnedResource(userId, createdById, isAdmin);
 
   async function copyInviteCode() {
     try {
@@ -121,7 +118,7 @@ export function TeamClient({ team, initialCards, userId, isAdmin }: Props) {
           <Link href={`/dashboard/teams/${team.id}/create`} className="btn-primary">
             + Nouvelle grille
           </Link>
-          {canDelete(team.createdById) && (
+          {canDeleteTeam(actor) && (
             <button
               type="button"
               onClick={() => void deleteTeam()}
@@ -139,6 +136,8 @@ export function TeamClient({ team, initialCards, userId, isAdmin }: Props) {
           {error}
         </p>
       )}
+
+      <TeamMembers teamId={team.id} initialMembers={team.members} actor={actor} />
 
       {cards.length === 0 ? (
         <motion.div
@@ -159,7 +158,7 @@ export function TeamClient({ team, initialCards, userId, isAdmin }: Props) {
               key={card.id}
               card={card}
               index={i}
-              canDelete={canDelete(card.createdById)}
+              canDelete={canDeleteCard(actor, card.createdById)}
               isDeleting={deletingCardId === card.id}
               onDelete={() => void deleteCard(card)}
             />
