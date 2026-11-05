@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
-import { getTeamMembership } from "@/lib/authz";
+import { getTeamActor, getTeamMembership } from "@/lib/authz";
+import { canManagePhrases } from "@/lib/authz-rules";
 import { getTeamPhrases } from "@/lib/data";
 import {
   createPhraseSchema,
@@ -11,6 +12,21 @@ import {
 import { parseJsonBody } from "@/lib/schemas/parse";
 
 type RouteContext = { params: Promise<{ teamId: string }> };
+
+type ReadyAuth = Extract<Awaited<ReturnType<typeof requireApiAccountReady>>, { ok: true }>;
+
+/** 404 hors de l'équipe, 403 sous le rôle ADMIN ; null si autorisé. */
+async function requirePhraseManager(auth: ReadyAuth, teamId: string) {
+  const actor = await getTeamActor(auth.session.user.id, teamId, auth.profile.isAdmin);
+  if (!actor) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  if (!canManagePhrases(actor)) {
+    return NextResponse.json(
+      { error: "Seuls les admins de l'équipe peuvent modifier les phrases" },
+      { status: 403 }
+    );
+  }
+  return null;
+}
 
 export async function GET(_req: Request, { params }: RouteContext) {
   const auth = await requireApiAccountReady();
@@ -50,8 +66,8 @@ export async function PATCH(req: Request, { params }: RouteContext) {
 
   const { teamId } = await params;
 
-  const membership = await getTeamMembership(auth.session.user.id, teamId);
-  if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  const actorError = await requirePhraseManager(auth, teamId);
+  if (actorError) return actorError;
 
   const parsed = await parseJsonBody(req, updatePhraseSchema);
   if (!parsed.ok) return parsed.response;
@@ -80,8 +96,8 @@ export async function DELETE(req: Request, { params }: RouteContext) {
 
   const { teamId } = await params;
 
-  const membership = await getTeamMembership(auth.session.user.id, teamId);
-  if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  const actorError = await requirePhraseManager(auth, teamId);
+  if (actorError) return actorError;
 
   const parsed = await parseJsonBody(req, deletePhraseSchema);
   if (!parsed.ok) return parsed.response;

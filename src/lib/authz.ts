@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import type { TeamActor } from "./authz-rules";
 
 /**
  * Vérifie qu'un utilisateur est membre d'une équipe.
@@ -11,8 +12,22 @@ export async function getTeamMembership(userId: string, teamId: string) {
 }
 
 /**
+ * Acteur d'une équipe (rôle + statut admin du site).
+ * Retourne null si l'utilisateur n'est ni membre ni admin du site.
+ */
+export async function getTeamActor(
+  userId: string,
+  teamId: string,
+  isSiteAdmin: boolean
+): Promise<TeamActor | null> {
+  const membership = await getTeamMembership(userId, teamId);
+  if (!membership && !isSiteAdmin) return null;
+  return { userId, role: membership?.role ?? null, isSiteAdmin };
+}
+
+/**
  * Vérifie qu'un utilisateur appartient à l'équipe propriétaire d'une grille.
- * Retourne la grille avec son teamId ou null.
+ * Retourne la grille avec son teamId et le rôle du membre, ou null.
  */
 export async function getCardIfMember(userId: string, cardId: string) {
   const card = await prisma.bingoCard.findUnique({
@@ -32,7 +47,7 @@ export async function getCardIfMember(userId: string, cardId: string) {
   const membership = await getTeamMembership(userId, card.teamId);
   if (!membership) return null;
 
-  return card;
+  return { ...card, role: membership.role };
 }
 
 /**
@@ -46,5 +61,3 @@ export async function getPhraseIfMember(userId: string, phraseId: string) {
   const membership = await getTeamMembership(userId, phrase.teamId);
   return membership ? phrase : null;
 }
-
-export { canDeleteOwnedResource } from "./authz-rules";

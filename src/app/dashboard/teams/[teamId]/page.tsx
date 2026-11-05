@@ -19,8 +19,7 @@ export default async function TeamPage({ params }: Props) {
     <TeamClient
       team={team}
       initialCards={cards}
-      userId={session.user.id}
-      isAdmin={profile.isAdmin}
+      actor={{ userId: session.user.id, role: membership.role, isSiteAdmin: profile.isAdmin }}
     />
   );
 }

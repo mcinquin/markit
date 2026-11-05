@@ -20,7 +20,7 @@ import {
   getTeamMembership,
   getCardIfMember,
   getPhraseIfMember,
-  canDeleteOwnedResource,
+  getTeamActor,
 } from "@/lib/authz";
 
 const mockedPrisma = prisma as unknown as {
@@ -71,8 +71,8 @@ describe("getCardIfMember", () => {
       isActive: true,
     };
     mockedPrisma.bingoCard.findUnique.mockResolvedValue(card);
-    mockedPrisma.teamMember.findUnique.mockResolvedValue({ id: "m1" });
-    expect(await getCardIfMember("u1", "c1")).toEqual(card);
+    mockedPrisma.teamMember.findUnique.mockResolvedValue({ id: "m1", role: "MEMBER" });
+    expect(await getCardIfMember("u1", "c1")).toEqual({ ...card, role: "MEMBER" });
   });
 });
 
@@ -98,20 +98,27 @@ describe("getPhraseIfMember", () => {
   });
 });
 
-describe("canDeleteOwnedResource", () => {
-  it("autorise l'admin", () => {
-    expect(canDeleteOwnedResource("u1", "u2", true)).toBe(true);
+describe("getTeamActor", () => {
+  it("retourne le rôle du membre", async () => {
+    mockedPrisma.teamMember.findUnique.mockResolvedValue({ id: "m1", role: "ADMIN" });
+    expect(await getTeamActor("u1", "t1", false)).toEqual({
+      userId: "u1",
+      role: "ADMIN",
+      isSiteAdmin: false,
+    });
   });
 
-  it("autorise le créateur", () => {
-    expect(canDeleteOwnedResource("u1", "u1", false)).toBe(true);
+  it("retourne null pour un non-membre", async () => {
+    mockedPrisma.teamMember.findUnique.mockResolvedValue(null);
+    expect(await getTeamActor("u1", "t1", false)).toBeNull();
   });
 
-  it("refuse un non-créateur non-admin", () => {
-    expect(canDeleteOwnedResource("u1", "u2", false)).toBe(false);
-  });
-
-  it("refuse si pas de créateur et non-admin", () => {
-    expect(canDeleteOwnedResource("u1", null, false)).toBe(false);
+  it("accepte l'admin du site non membre, sans rôle", async () => {
+    mockedPrisma.teamMember.findUnique.mockResolvedValue(null);
+    expect(await getTeamActor("u1", "t1", true)).toEqual({
+      userId: "u1",
+      role: null,
+      isSiteAdmin: true,
+    });
   });
 });

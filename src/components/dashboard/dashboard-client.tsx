@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiRequest } from "@/lib/api-client";
-import { canDeleteOwnedResource } from "@/lib/authz-rules";
+import { canDeleteTeam as canDeleteTeamRule } from "@/lib/authz-rules";
+import { isTeamRole } from "@/lib/team-roles";
 import type { DashboardTeam } from "@/types";
 
 type Props = {
@@ -26,8 +27,14 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const canDeleteTeam = (team: DashboardTeam) =>
-    canDeleteOwnedResource(userId, team.createdById, isAdmin);
+  const canDeleteTeam = (team: DashboardTeam) => {
+    const role = team.members.find((m) => m.user.id === userId)?.role;
+    return canDeleteTeamRule({
+      userId: userId ?? "",
+      role: isTeamRole(role) ? role : null,
+      isSiteAdmin: isAdmin,
+    });
+  };
 
   async function fetchTeams() {
     const result = await apiRequest<DashboardTeam[]>("/api/teams");

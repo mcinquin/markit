@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
-import { canDeleteOwnedResource, getTeamMembership } from "@/lib/authz";
+import { getTeamActor, getTeamMembership } from "@/lib/authz";
+import { canDeleteTeam } from "@/lib/authz-rules";
 import { teamMembersInclude } from "@/lib/data";
 
 type RouteContext = { params: Promise<{ teamId: string }> };
@@ -35,13 +36,13 @@ export async function DELETE(_req: Request, { params }: RouteContext) {
 
   const { teamId } = await params;
 
-  const team = await prisma.team.findUnique({
-    where: { id: teamId },
-    select: { createdById: true },
-  });
+  const team = await prisma.team.findUnique({ where: { id: teamId }, select: { id: true } });
   if (!team) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  if (!canDeleteOwnedResource(auth.session.user.id, team.createdById, auth.profile.isAdmin)) {
+  const actor = await getTeamActor(auth.session.user.id, teamId, auth.profile.isAdmin);
+  if (!actor) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+
+  if (!canDeleteTeam(actor)) {
     return NextResponse.json({ error: "Suppression non autorisée" }, { status: 403 });
   }
 
