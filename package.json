@@ -1,6 +1,6 @@
 {
   "name": "markit",
-  "version": "1.8.47",
+  "version": "1.8.49",
   "private": true,
   "engines": {
     "node": ">=26 <27"
@@ -41,7 +41,7 @@
     "@types/bcryptjs": "^3.0.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^18.0.9",
-    "framer-motion": "^14.7.1",
+    "framer-motion": "^14.9.0",
     "next": "16.4.3",
     "next-auth": "^4.24.13",
     "pg": "^8.23.1",
@@ -69,7 +69,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "eslint": "^10.13.0",
+    "eslint": "^10.14.0",
     "eslint-config-next": "16.4.3",
     "husky": "^9.1.7",
     "jest": "^30.5.2",
@@ -91,6 +91,9 @@
     "deepmerge-ts": "^8.0.2",
     "mysql2": "^3.24.3",
     "undici": "^6.28.1",
-    "ip-address": "^10.7.1"
+    "ip-address": "^10.7.1",
+    "re2js": "2.8.7",
+    "katex": "0.18.2",
+    "npm": "11.21.1"
   }
 }
