@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { getCardIfMember } from "@/lib/authz";
+import { emitCellUpdated } from "@/lib/realtime";
 import { checkCellSchema } from "@/lib/schemas/card";
 import { parseJsonBody } from "@/lib/schemas/parse";
 
@@ -12,8 +13,9 @@ export async function POST(req: Request, { params }: RouteContext) {
   if (!auth.ok) return auth.response;
 
   const { cardId } = await params;
+  const { user } = auth.session;
 
-  const access = await getCardIfMember(auth.session.user.id, cardId);
+  const access = await getCardIfMember(user.id, cardId);
   if (!access) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   const parsed = await parseJsonBody(req, checkCellSchema);
@@ -23,37 +25,24 @@ export async function POST(req: Request, { params }: RouteContext) {
 
   const cell = await prisma.cell.findFirst({
     where: { id: cellId, cardId },
+    select: { id: true },
   });
   if (!cell) return NextResponse.json({ error: "Case introuvable" }, { status: 404 });
 
+  const userName = user.name || user.email || "?";
+
   if (checked) {
-    const existing = await prisma.checkedCell.findUnique({ where: { cellId } });
-    if (existing) return NextResponse.json(existing);
-
-    const checkedCell = await prisma.checkedCell.create({
-      data: { cellId, userId: auth.session.user.id },
+    // Upsert natif (ON CONFLICT) : deux clics simultanés ne lèvent pas d'erreur d'unicité
+    const checkedCell = await prisma.checkedCell.upsert({
+      where: { cellId },
+      create: { cellId, userId: user.id },
+      update: {},
     });
-
-    if (global.io) {
-      global.io.to(`card:${cardId}`).emit("cell-updated", {
-        cellId,
-        checked: true,
-        userName: auth.session.user.name || auth.session.user.email,
-      });
-    }
-
+    emitCellUpdated(cardId, { cellId, checked: true, userName });
     return NextResponse.json(checkedCell);
   }
 
   await prisma.checkedCell.deleteMany({ where: { cellId } });
-
-  if (global.io) {
-    global.io.to(`card:${cardId}`).emit("cell-updated", {
-      cellId,
-      checked: false,
-      userName: auth.session.user.name || auth.session.user.email,
-    });
-  }
-
+  emitCellUpdated(cardId, { cellId, checked: false, userName });
   return NextResponse.json({ ok: true });
 }

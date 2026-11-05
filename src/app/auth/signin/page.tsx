@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MarkItLogo } from "@/components/markit-logo/markit-logo";
+import { FormError } from "@/components/auth/form-feedback";
 
 export default function SignInPage() {
   const router = useRouter();
+  const fieldId = useId();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -25,20 +27,15 @@ export default function SignInPage() {
       redirect: false,
     });
 
-    setLoading(false);
-
-    if (result?.error) {
+    if (!result || result.error) {
+      setLoading(false);
       setError("Email ou mot de passe incorrect");
-    } else {
-      const accountRes = await fetch("/api/account");
-      if (accountRes.ok) {
-        const account = await accountRes.json();
-        router.push(account.mustChangePassword ? "/account" : "/dashboard");
-      } else {
-        router.push("/dashboard");
-      }
-      router.refresh();
+      return;
     }
+
+    // Le garde serveur redirige vers /account si une configuration est requise
+    router.push("/dashboard");
+    router.refresh();
   }
 
   return (
@@ -53,21 +50,29 @@ export default function SignInPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-semibold text-ink-muted">Email</label>
+            <label htmlFor={`${fieldId}-email`} className="mb-1 block text-sm font-semibold text-ink-muted">
+              Email
+            </label>
             <input
+              id={`${fieldId}-email`}
               type="email"
               className="input"
               placeholder="toi@entreprise.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               required
             />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm font-semibold text-ink-muted">Mot de passe</label>
+            <label htmlFor={`${fieldId}-password`} className="mb-1 block text-sm font-semibold text-ink-muted">
+              Mot de passe
+            </label>
             <div className="relative">
               <input
+                id={`${fieldId}-password`}
+                autoComplete="current-password"
                 type={showPassword ? "text" : "password"}
                 className="input pr-11"
                 placeholder="••••••••••••"
@@ -119,11 +124,7 @@ export default function SignInPage() {
             </div>
           </div>
 
-          {error && (
-            <div className="rounded-sm border border-red-200 bg-danger-soft px-3 py-2 text-sm font-semibold text-danger shadow-[1px_2px_0_rgba(220,38,38,0.15)]">
-              {error}
-            </div>
-          )}
+          <FormError message={error} />
 
           <button type="submit" className="btn-primary w-full" disabled={loading}>
             {loading ? "Connexion…" : "C'est parti"}

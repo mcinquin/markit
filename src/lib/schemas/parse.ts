@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ZodError, type ZodSchema } from "zod";
+import { ZodError, type ZodType } from "zod";
 
 export function zodErrorResponse(error: ZodError) {
   const message = error.issues[0]?.message ?? "Données invalides";
@@ -8,7 +8,7 @@ export function zodErrorResponse(error: ZodError) {
 
 export async function parseJsonBody<T>(
   req: Request,
-  schema: ZodSchema<T>
+  schema: ZodType<T>
 ): Promise<{ ok: true; data: T } | { ok: false; response: NextResponse }> {
   let raw: unknown;
   try {

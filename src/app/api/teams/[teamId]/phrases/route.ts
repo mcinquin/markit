@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { getTeamMembership } from "@/lib/authz";
+import { getTeamPhrases } from "@/lib/data";
 import {
   createPhraseSchema,
   deletePhraseSchema,
@@ -20,15 +21,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
   const membership = await getTeamMembership(auth.session.user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  const [defaults, custom] = await Promise.all([
-    prisma.phrase.findMany({ where: { isDefault: true }, orderBy: { text: "asc" } }),
-    prisma.phrase.findMany({
-      where: { teamId, isDefault: false },
-      orderBy: { createdAt: "desc" },
-    }),
-  ]);
-
-  return NextResponse.json({ defaults, custom });
+  return NextResponse.json(await getTeamPhrases(teamId));
 }
 
 export async function POST(req: Request, { params }: RouteContext) {

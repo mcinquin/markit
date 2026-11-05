@@ -1,5 +1,4 @@
 import { prisma } from "./prisma";
-import { isAdmin } from "./admin";
 
 /**
  * Vérifie qu'un utilisateur est membre d'une équipe.
@@ -48,30 +47,4 @@ export async function getPhraseIfMember(userId: string, phraseId: string) {
   return membership ? phrase : null;
 }
 
-/** Admin ou créateur de la ressource. */
-export function canDeleteOwnedResource(
-  userId: string,
-  createdById: string | null | undefined,
-  userIsAdmin: boolean
-): boolean {
-  if (userIsAdmin) return true;
-  return Boolean(createdById && createdById === userId);
-}
-
-export async function canDeleteTeam(userId: string, teamId: string): Promise<boolean> {
-  const [team, userIsAdmin] = await Promise.all([
-    prisma.team.findUnique({ where: { id: teamId }, select: { createdById: true } }),
-    isAdmin(userId),
-  ]);
-  if (!team) return false;
-  return canDeleteOwnedResource(userId, team.createdById, userIsAdmin);
-}
-
-export async function canDeleteCard(userId: string, cardId: string): Promise<boolean> {
-  const [card, userIsAdmin] = await Promise.all([
-    prisma.bingoCard.findUnique({ where: { id: cardId }, select: { createdById: true } }),
-    isAdmin(userId),
-  ]);
-  if (!card) return false;
-  return canDeleteOwnedResource(userId, card.createdById, userIsAdmin);
-}
+export { canDeleteOwnedResource } from "./authz-rules";

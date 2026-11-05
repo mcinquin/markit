@@ -65,6 +65,37 @@ export function getCenterPosition(rows: number, cols: number): number | null {
   return Math.floor(rows / 2) * cols + Math.floor(cols / 2);
 }
 
+/** Position of the FREE cell for a card, or null when disabled / impossible. */
+export function getFreeCenterPosition(card: {
+  rows: number;
+  cols: number;
+  freeCenter: boolean;
+}): number | null {
+  return card.freeCenter ? getCenterPosition(card.rows, card.cols) : null;
+}
+
+/** Grid positions counting as checked: checked cells plus the FREE cell. */
+export function getCheckedPositions(
+  cells: readonly { id: string; position: number }[],
+  checkedCellIds: ReadonlySet<string>,
+  freeCenterPosition: number | null
+): Set<number> {
+  const positions = new Set<number>();
+  for (const cell of cells) {
+    if (cell.position === freeCenterPosition || checkedCellIds.has(cell.id)) {
+      positions.add(cell.position);
+    }
+  }
+  return positions;
+}
+
+/** Human-readable (French) label for a winning pattern. */
+export function getPatternLabel(pattern: BingoPattern): string {
+  if (pattern.type === "row") return `Ligne ${pattern.index + 1}`;
+  if (pattern.type === "column") return `Colonne ${pattern.index + 1}`;
+  return pattern.index === 0 ? "Diag ↘" : "Diag ↗";
+}
+
 /**
  * Shuffles array using Fisher-Yates algorithm.
  */

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { apiRequest } from "@/lib/api-client";
 import type { AdminInvite, AdminUser } from "@/types";
 
 type Tab = "users" | "invites";
@@ -19,34 +20,43 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
   const [validityDays, setValidityDays] = useState(7);
   const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   async function fetchInvites() {
-    const res = await fetch("/api/admin/invites");
-    if (res.ok) setInvites(await res.json());
+    const result = await apiRequest<AdminInvite[]>("/api/admin/invites");
+    if (result.ok) setInvites(result.data);
   }
 
   async function createInvite(e: React.FormEvent) {
     e.preventDefault();
     setCreating(true);
-    const res = await fetch("/api/admin/invites", {
+    setError("");
+    const result = await apiRequest("/api/admin/invites", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ note, validityDays }),
+      json: { note, validityDays },
+      fallbackError: "Impossible de générer l'invitation",
     });
-    if (res.ok) {
+    if (result.ok) {
       await fetchInvites();
       setNote("");
+    } else {
+      setError(result.error);
     }
     setCreating(false);
   }
 
   async function revokeInvite(id: string) {
     if (!confirm("Révoquer ce lien d'invitation ?")) return;
-    await fetch("/api/admin/invites", {
+    setError("");
+    const result = await apiRequest("/api/admin/invites", {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      json: { id },
+      fallbackError: "Impossible de supprimer l'invitation",
     });
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
     setInvites((prev) => prev.filter((inv) => inv.id !== id));
   }
 
@@ -54,10 +64,14 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
     return `${window.location.origin}/auth/signup?token=${token}`;
   }
 
-  function copyLink(invite: AdminInvite) {
-    navigator.clipboard.writeText(getInviteUrl(invite.token));
-    setCopiedId(invite.id);
-    setTimeout(() => setCopiedId(null), 2000);
+  async function copyLink(invite: AdminInvite) {
+    try {
+      await navigator.clipboard.writeText(getInviteUrl(invite.token));
+      setCopiedId(invite.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      setError("Copie impossible depuis ce navigateur");
+    }
   }
 
   function isExpired(invite: AdminInvite) {
@@ -82,6 +96,12 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
           {users.length} utilisateur{users.length !== 1 ? "s" : ""}
         </p>
       </div>
+
+      {error && (
+        <p role="alert" className="mb-4 text-sm font-semibold text-danger">
+          {error}
+        </p>
+      )}
 
       <div className="mb-8 flex gap-1 border-b border-paper-line">
         {(
@@ -212,7 +232,7 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
                         key={invite.id}
                         invite={invite}
                         copied={copiedId === invite.id}
-                        onCopy={() => copyLink(invite)}
+                        onCopy={() => void copyLink(invite)}
                         onRevoke={() => revokeInvite(invite.id)}
                         status="active"
                       />
