@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { apiRequest } from "@/lib/api-client";
 import { canChangeRole, hasTeamRole, type TeamActor } from "@/lib/authz-rules";
 import type { TeamOverviewMember } from "@/lib/data";
-import { ROLE_LABELS, TEAM_ROLES, type TeamRole } from "@/lib/team-roles";
+import { TEAM_ROLES, type TeamRole } from "@/lib/team-roles";
 
 type Props = {
   teamId: string;
@@ -16,6 +17,9 @@ type Props = {
 /** Liste des membres ; l'OWNER (ou l'admin du site) peut changer les rôles. */
 export function TeamMembers({ teamId, initialMembers, actor }: Props) {
   const router = useRouter();
+  const t = useTranslations("team.members");
+  const tRoles = useTranslations("roles");
+  const tApi = useTranslations("apiClient");
   const [members, setMembers] = useState(initialMembers);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -33,7 +37,8 @@ export function TeamMembers({ teamId, initialMembers, actor }: Props) {
     const result = await apiRequest(`/api/teams/${teamId}/members/${member.id}`, {
       method: "PATCH",
       json: { role },
-      fallbackError: "Changement de rôle impossible",
+      fallbackError: t("changeFailed"),
+      networkError: tApi("network"),
     });
     setSavingId(null);
 
@@ -49,7 +54,7 @@ export function TeamMembers({ teamId, initialMembers, actor }: Props) {
   return (
     <section aria-labelledby="team-members-title" className="mb-8">
       <h2 id="team-members-title" className="mb-3 font-display text-2xl text-ink">
-        Membres
+        {t("title")}
       </h2>
 
       {error && (
@@ -60,18 +65,18 @@ export function TeamMembers({ teamId, initialMembers, actor }: Props) {
 
       <ul className="surface divide-y divide-paper-line">
         {members.map((member) => {
-          const name = member.user.name ?? "Sans nom";
+          const name = member.user.name ?? t("noName");
           const isSelf = member.user.id === actor.userId;
           return (
             <li key={member.id} className="flex items-center justify-between gap-3 px-4 py-3">
               <span className="min-w-0 truncate font-bold text-ink">
                 {name}
-                {isSelf && <span className="ml-1 font-normal text-ink-faint">(toi)</span>}
+                {isSelf && <span className="ml-1 font-normal text-ink-faint">{t("you")}</span>}
               </span>
 
               {canEditRoles ? (
                 <select
-                  aria-label={`Rôle de ${name}`}
+                  aria-label={t("roleOf", { name })}
                   className="rounded-sm border border-paper-line bg-note px-2 py-1 text-sm"
                   value={member.role}
                   disabled={savingId === member.id}
@@ -83,13 +88,13 @@ export function TeamMembers({ teamId, initialMembers, actor }: Props) {
                       value={role}
                       disabled={!canChangeRole(actor, member, role, ownerCount)}
                     >
-                      {ROLE_LABELS[role]}
+                      {tRoles(role)}
                     </option>
                   ))}
                 </select>
               ) : (
                 <span className={member.role === "MEMBER" ? "chip" : "chip-accent"}>
-                  {ROLE_LABELS[member.role]}
+                  {tRoles(member.role)}
                 </span>
               )}
             </li>

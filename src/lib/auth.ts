@@ -3,6 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { prisma } from "./prisma";
+import { isLocale, toLocale } from "@/i18n/config";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as NextAuthOptions["adapter"],
@@ -41,6 +42,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             image: user.image,
             mustChangePassword: user.mustChangePassword,
+            locale: toLocale(user.locale),
           };
         } catch (error) {
           console.error("[auth] Échec authorize (schéma BDD à jour ? npm run db:push) :", error);
@@ -55,6 +57,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.sub = user.id;
         token.mustChangePassword = user.mustChangePassword ?? false;
+        token.locale = user.locale;
       }
 
       // Credentials + JWT : toujours exposer un id stable (sub en secours)
@@ -69,6 +72,9 @@ export const authOptions: NextAuthOptions = {
         if (session.mustChangePassword !== undefined) {
           token.mustChangePassword = session.mustChangePassword;
         }
+        if (isLocale(session.locale)) {
+          token.locale = session.locale;
+        }
       }
 
       return token;
@@ -80,6 +86,9 @@ export const authOptions: NextAuthOptions = {
           session.user.id = userId;
         }
         session.user.mustChangePassword = token.mustChangePassword === true;
+        if (isLocale(token.locale)) {
+          session.user.locale = token.locale;
+        }
         if (token.name) {
           session.user.name = token.name as string;
         }

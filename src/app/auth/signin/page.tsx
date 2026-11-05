@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MarkItLogo } from "@/components/markit-logo/markit-logo";
@@ -9,6 +10,7 @@ import { FormError } from "@/components/auth/form-feedback";
 
 export default function SignInPage() {
   const router = useRouter();
+  const t = useTranslations("signIn");
   const fieldId = useId();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,7 +31,7 @@ export default function SignInPage() {
 
     if (!result || result.error) {
       setLoading(false);
-      setError("Email ou mot de passe incorrect");
+      setError(t("invalidCredentials"));
       return;
     }
 
@@ -45,19 +47,19 @@ export default function SignInPage() {
           <Link href="/" className="inline-block">
             <MarkItLogo className="h-16 w-auto max-w-full" />
           </Link>
-          <p className="mt-4 text-ink-faint">Reconnecte-toi — la grille t&apos;attend</p>
+          <p className="mt-4 text-ink-faint">{t("tagline")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor={`${fieldId}-email`} className="mb-1 block text-sm font-semibold text-ink-muted">
-              Email
+              {t("email")}
             </label>
             <input
               id={`${fieldId}-email`}
               type="email"
               className="input"
-              placeholder="toi@entreprise.com"
+              placeholder={t("emailPlaceholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -67,7 +69,7 @@ export default function SignInPage() {
 
           <div>
             <label htmlFor={`${fieldId}-password`} className="mb-1 block text-sm font-semibold text-ink-muted">
-              Mot de passe
+              {t("password")}
             </label>
             <div className="relative">
               <input
@@ -84,7 +86,7 @@ export default function SignInPage() {
                 type="button"
                 className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-faint hover:text-ink-muted"
                 onClick={() => setShowPassword((visible) => !visible)}
-                aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                aria-label={showPassword ? t("hidePassword") : t("showPassword")}
                 aria-pressed={showPassword}
               >
                 {showPassword ? (
@@ -127,16 +129,14 @@ export default function SignInPage() {
           <FormError message={error} />
 
           <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? "Connexion…" : "C'est parti"}
+            {loading ? t("submitting") : t("submit")}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-ink-faint">
-          L&apos;inscription se fait uniquement sur invitation.
-        </p>
+        <p className="mt-6 text-center text-xs text-ink-faint">{t("inviteOnly")}</p>
         <p className="mt-3 text-center">
           <Link href="/" className="text-sm text-ink-faint hover:text-accent">
-            Retour à l&apos;accueil
+            {t("backHome")}
           </Link>
         </p>
       </div>

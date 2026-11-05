@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { jsonResponse, mockFetch, routerMock, sentJson } from "@/test-utils/mocks";
+import { renderWithIntl } from "@/test-utils/i18n";
 import type { AccountProfile } from "@/types";
 import { AccountSettingsForm } from "../account-settings-form";
 
@@ -19,6 +20,7 @@ const profile: AccountProfile = {
   email: "alex@example.com",
   isAdmin: false,
   mustChangePassword: false,
+  locale: "fr",
 };
 
 describe("AccountSettingsForm", () => {
@@ -29,13 +31,13 @@ describe("AccountSettingsForm", () => {
   });
 
   it("pré-remplit le profil reçu du serveur", () => {
-    render(<AccountSettingsForm initialProfile={profile} />);
+    renderWithIntl(<AccountSettingsForm initialProfile={profile} />);
     expect(screen.getByLabelText("Prénom")).toHaveValue("Alex");
     expect(screen.getByText("alex@example.com")).toBeInTheDocument();
   });
 
   it("refuse d'enregistrer sans modification", async () => {
-    render(<AccountSettingsForm initialProfile={profile} />);
+    renderWithIntl(<AccountSettingsForm initialProfile={profile} />);
     await userEvent.click(screen.getByRole("button", { name: "Enregistrer" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent("Aucune modification à enregistrer");
@@ -44,7 +46,7 @@ describe("AccountSettingsForm", () => {
 
   it("vérifie la confirmation du mot de passe", async () => {
     const user = userEvent.setup();
-    render(<AccountSettingsForm initialProfile={profile} />);
+    renderWithIntl(<AccountSettingsForm initialProfile={profile} />);
 
     await user.type(screen.getByLabelText("Nouveau mot de passe (optionnel)"), "nouveau-mdp-solide");
     await user.type(screen.getByLabelText("Confirmer le mot de passe"), "autre-mdp-solide!");
@@ -57,7 +59,7 @@ describe("AccountSettingsForm", () => {
   it("enregistre le prénom et met à jour la session", async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValue(jsonResponse({ ...profile, name: "Sam" }));
-    render(<AccountSettingsForm initialProfile={profile} />);
+    renderWithIntl(<AccountSettingsForm initialProfile={profile} />);
 
     await user.clear(screen.getByLabelText("Prénom"));
     await user.type(screen.getByLabelText("Prénom"), "Sam");
@@ -71,7 +73,7 @@ describe("AccountSettingsForm", () => {
   it("termine la configuration initiale et redirige", async () => {
     const user = userEvent.setup();
     fetchMock.mockResolvedValue(jsonResponse({ ...profile, mustChangePassword: false }));
-    render(<AccountSettingsForm initialProfile={{ ...profile, mustChangePassword: true }} />);
+    renderWithIntl(<AccountSettingsForm initialProfile={{ ...profile, mustChangePassword: true }} />);
 
     expect(screen.queryByLabelText("Mot de passe actuel")).not.toBeInTheDocument();
     await user.type(screen.getByLabelText("Nouveau mot de passe"), "nouveau-mdp-solide");
@@ -80,5 +82,16 @@ describe("AccountSettingsForm", () => {
 
     expect(sentJson(fetchMock)).toEqual({ name: "Alex", newPassword: "nouveau-mdp-solide" });
     expect(routerMock.push).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("enregistre le changement de langue immédiatement", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ ...profile, locale: "en" }));
+    renderWithIntl(<AccountSettingsForm initialProfile={profile} />);
+
+    await userEvent.selectOptions(screen.getByLabelText("Langue"), "en");
+
+    expect(sentJson(fetchMock)).toEqual({ locale: "en" });
+    expect(mockUpdateSession).toHaveBeenCalledWith({ locale: "en" });
+    expect(routerMock.refresh).toHaveBeenCalled();
   });
 });

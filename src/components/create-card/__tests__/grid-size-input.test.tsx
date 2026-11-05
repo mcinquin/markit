@@ -1,10 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithIntl } from "@/test-utils/i18n";
 import userEvent from "@testing-library/user-event";
 import { GridSizeInput } from "../grid-size-input";
 
 function setup(value = 5) {
   const onChange = jest.fn();
-  render(<GridSizeInput label="Lignes" value={value} onChange={onChange} />);
+  renderWithIntl(<GridSizeInput label="Lignes" value={value} onChange={onChange} />);
   return { onChange, input: screen.getByLabelText("Lignes"), user: userEvent.setup() };
 }
 

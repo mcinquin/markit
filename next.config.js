@@ -1,3 +1,9 @@
+// Config CJS (module.exports) : require nécessaire pour le plugin next-intl.
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- next.config.js is CommonJS
+const createNextIntlPlugin = require("next-intl/plugin");
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
 /** @type {import('next').NextConfig} */
 
 const isProd = process.env.NODE_ENV === "production";
@@ -64,4 +70,4 @@ const nextConfig = {
   poweredByHeader: false,
 };
 
-module.exports = nextConfig;
+module.exports = withNextIntl(nextConfig);

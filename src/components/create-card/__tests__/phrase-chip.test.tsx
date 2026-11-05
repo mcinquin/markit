@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithIntl } from "@/test-utils/i18n";
 import userEvent from "@testing-library/user-event";
 import { PhraseChip } from "../phrase-chip";
 
@@ -7,7 +8,7 @@ const phrase = { id: "p1", text: "Tu es en mute", emoji: "🔇", isDefault: fals
 describe("PhraseChip", () => {
   it("reflète la sélection et déclenche onClick", async () => {
     const onClick = jest.fn();
-    render(<PhraseChip phrase={phrase} selected onClick={onClick} />);
+    renderWithIntl(<PhraseChip phrase={phrase} selected onClick={onClick} />);
 
     const chip = screen.getByRole("button", { name: /Tu es en mute/ });
     expect(chip).toHaveAttribute("aria-pressed", "true");
@@ -17,7 +18,7 @@ describe("PhraseChip", () => {
   });
 
   it("n'affiche pas les actions sans handlers (phrase classique)", () => {
-    render(<PhraseChip phrase={phrase} selected={false} onClick={jest.fn()} />);
+    renderWithIntl(<PhraseChip phrase={phrase} selected={false} onClick={jest.fn()} />);
     expect(screen.queryByRole("button", { name: /Modifier/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Supprimer/ })).not.toBeInTheDocument();
   });
@@ -26,7 +27,7 @@ describe("PhraseChip", () => {
     const onClick = jest.fn();
     const onEdit = jest.fn();
     const onDelete = jest.fn();
-    render(
+    renderWithIntl(
       <PhraseChip
         phrase={phrase}
         selected={false}

@@ -1,4 +1,4 @@
-import { getCheckedPositions, getFreeCenterPosition, getPatternLabel } from "@/lib/bingo";
+import { getCheckedPositions, getFreeCenterPosition, getPatternMessage } from "@/lib/bingo";
 
 describe("getFreeCenterPosition", () => {
   it("retourne le centre si activé sur grille impaire", () => {
@@ -30,11 +30,23 @@ describe("getCheckedPositions", () => {
   });
 });
 
-describe("getPatternLabel", () => {
-  it("formate chaque type de motif", () => {
-    expect(getPatternLabel({ type: "row", index: 0, positions: [] })).toBe("Ligne 1");
-    expect(getPatternLabel({ type: "column", index: 2, positions: [] })).toBe("Colonne 3");
-    expect(getPatternLabel({ type: "diagonal", index: 0, positions: [] })).toBe("Diag ↘");
-    expect(getPatternLabel({ type: "diagonal", index: 1, positions: [] })).toBe("Diag ↗");
+describe("getPatternMessage", () => {
+  it("associe chaque type de motif à une clé de message", () => {
+    expect(getPatternMessage({ type: "row", index: 0, positions: [] })).toEqual({
+      key: "row",
+      n: 1,
+    });
+    expect(getPatternMessage({ type: "column", index: 2, positions: [] })).toEqual({
+      key: "column",
+      n: 3,
+    });
+    expect(getPatternMessage({ type: "diagonal", index: 0, positions: [] })).toEqual({
+      key: "diagonalMain",
+      n: 1,
+    });
+    expect(getPatternMessage({ type: "diagonal", index: 1, positions: [] })).toEqual({
+      key: "diagonalAnti",
+      n: 2,
+    });
   });
 });

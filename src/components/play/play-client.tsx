@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Socket } from "socket.io-client";
 import { apiRequest } from "@/lib/api-client";
-import { getFreeCenterPosition, getPatternLabel } from "@/lib/bingo";
+import { getFreeCenterPosition, getPatternMessage } from "@/lib/bingo";
 import type { PlayCard, PlayCell } from "@/lib/data";
 import type { CellUpdatedEvent } from "@/lib/realtime";
 import { BingoCell } from "./bingo-cell";
@@ -29,6 +30,8 @@ type Props = {
 
 /** Écran de jeu temps réel (Socket.io + polling de secours si le WebSocket tombe). */
 export function PlayClient({ initialCard, currentUser }: Props) {
+  const t = useTranslations("play");
+  const tApi = useTranslations("apiClient");
   const cardId = initialCard.id;
   const [card, setCard] = useState(initialCard);
   const [showBingo, setShowBingo] = useState(false);
@@ -127,14 +130,15 @@ export function PlayClient({ initialCard, currentUser }: Props) {
 
     // Confettis dans le même tick que le clic ; les autres joueurs sont prévenus via le socket
     if (isNowChecked && getCardPatterns(nextCard).length > bingoPatterns.length) {
-      celebrateBingo(currentUser.name || "Toi");
+      celebrateBingo(currentUser.name || t("you"));
       socketRef.current?.emit("bingo", { cardId });
     }
 
     const result = await apiRequest(`/api/cards/${cardId}/check`, {
       method: "POST",
       json: { cellId: cell.id, checked: isNowChecked },
-      fallbackError: "La case n'a pas pu être enregistrée",
+      fallbackError: t("saveFailed"),
+      networkError: tApi("network"),
     });
     if (!result.ok) {
       setError(result.error);
@@ -178,7 +182,7 @@ export function PlayClient({ initialCard, currentUser }: Props) {
                 animate={{ rotate: [-1.5, 1.5, 0] }}
                 transition={{ duration: 0.4 }}
               >
-                BINGO!
+                {t("bingo")}
               </motion.p>
               <p className="mt-1 text-base font-semibold text-ink-muted">
                 {bingoWinner} a collé la ligne gagnante
@@ -204,7 +208,7 @@ export function PlayClient({ initialCard, currentUser }: Props) {
           </div>
 
           <div className="flex items-center gap-4">
-            <OnlineMembers members={onlineMembers} />
+            <OnlineMembers members={onlineMembers} onlineLabel={t("online", { count: onlineMembers.length })} />
 
             <div className="hidden items-center gap-2 sm:flex">
               <div className="h-2 w-24 overflow-hidden rounded-md bg-paper-line">
@@ -222,15 +226,18 @@ export function PlayClient({ initialCard, currentUser }: Props) {
       {bingoPatterns.length > 0 && (
         <div className="mx-auto max-w-5xl px-4 pt-4">
           <div className="flex flex-wrap gap-2">
-            {bingoPatterns.map((pattern, i) => (
-              <span
-                key={`${pattern.type}-${pattern.index}`}
-                className="animate-pop rounded-md border border-spark-deep/20 bg-spark px-3 py-1 text-sm font-bold text-ink shadow-sm"
-                style={{ transform: i % 2 === 0 ? "rotate(-1deg)" : "rotate(1deg)" }}
-              >
-                {getPatternLabel(pattern)}
-              </span>
-            ))}
+            {bingoPatterns.map((pattern, i) => {
+              const msg = getPatternMessage(pattern);
+              return (
+                <span
+                  key={`${pattern.type}-${pattern.index}`}
+                  className="animate-pop rounded-md border border-spark-deep/20 bg-spark px-3 py-1 text-sm font-bold text-ink shadow-sm"
+                  style={{ transform: i % 2 === 0 ? "rotate(-1deg)" : "rotate(1deg)" }}
+                >
+                  {t(`patterns.${msg.key}`, { n: msg.n })}
+                </span>
+              );
+            })}
           </div>
         </div>
       )}
@@ -262,16 +269,16 @@ export function PlayClient({ initialCard, currentUser }: Props) {
 
         <div className="surface mt-8 flex items-center justify-between">
           <div className="flex gap-6 text-center">
-            <Stat value={checkedCount} label="Cochées" className="text-accent" />
-            <Stat value={totalCells - checkedCount} label="Restantes" className="text-ink-faint" />
+            <Stat value={checkedCount} label={t("checked")} className="text-accent" />
+            <Stat value={totalCells - checkedCount} label={t("remaining")} className="text-ink-faint" />
             <Stat
               value={bingoPatterns.length}
-              label={`Bingo${bingoPatterns.length !== 1 ? "s" : ""}`}
+              label={t("bingos", { count: bingoPatterns.length })}
               className="text-spark-deep"
             />
           </div>
           <p className="text-xs text-ink-faint">
-            Grille {card.rows}×{card.cols}
+            {t("gridSize", { rows: card.rows, cols: card.cols })}
           </p>
         </div>
       </div>
@@ -288,7 +295,7 @@ function Stat({ value, label, className }: { value: number; label: string; class
   );
 }
 
-function OnlineMembers({ members }: { members: OnlineMember[] }) {
+function OnlineMembers({ members, onlineLabel }: { members: OnlineMember[]; onlineLabel: string }) {
   const hiddenCount = members.length - MAX_VISIBLE_MEMBERS;
 
   return (
@@ -309,7 +316,7 @@ function OnlineMembers({ members }: { members: OnlineMember[] }) {
       )}
       {members.length > 0 && (
         <span className="ml-1 hidden text-xs font-bold text-accent sm:inline">
-          ● {members.length} en ligne
+          {onlineLabel}
         </span>
       )}
     </div>

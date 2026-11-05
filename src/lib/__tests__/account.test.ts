@@ -6,13 +6,13 @@ describe("validateUserName", () => {
   });
 
   it("refuse vide ou trop long", () => {
-    expect(validateUserName("")).toHaveProperty("error");
-    expect(validateUserName("   ")).toHaveProperty("error");
-    expect(validateUserName("a".repeat(101))).toHaveProperty("error");
+    expect(validateUserName("")).toEqual({ error: "nameLength" });
+    expect(validateUserName("   ")).toEqual({ error: "nameLength" });
+    expect(validateUserName("a".repeat(101))).toEqual({ error: "nameLength" });
   });
 
   it("refuse non-string", () => {
-    expect(validateUserName(null)).toHaveProperty("error");
+    expect(validateUserName(null)).toEqual({ error: "nameRequired" });
   });
 });
 
@@ -23,7 +23,7 @@ describe("validateNewPassword", () => {
   });
 
   it("refuse trop court ou trop long", () => {
-    expect(validateNewPassword("short")).toHaveProperty("error");
-    expect(validateNewPassword("a".repeat(129))).toHaveProperty("error");
+    expect(validateNewPassword("short")).toEqual({ error: "passwordTooShort" });
+    expect(validateNewPassword("a".repeat(129))).toEqual({ error: "passwordTooLong" });
   });
 });

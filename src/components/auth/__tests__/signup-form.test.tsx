@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { signIn } from "next-auth/react";
 import { jsonResponse, mockFetch, routerMock, sentJson } from "@/test-utils/mocks";
+import { renderWithIntl } from "@/test-utils/i18n";
 import { SignUpForm } from "../signup-form";
 
 jest.mock("next/navigation", () => ({
@@ -29,7 +30,7 @@ describe("SignUpForm", () => {
   it("inscrit, connecte puis redirige vers le dashboard", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ id: "u1" }, 201));
     signInMock.mockResolvedValue({ ok: true, error: null });
-    render(<SignUpForm inviteToken="tok-123" />);
+    renderWithIntl(<SignUpForm inviteToken="tok-123" />);
 
     await fillAndSubmit();
 
@@ -52,7 +53,7 @@ describe("SignUpForm", () => {
     fetchMock.mockResolvedValue(
       jsonResponse({ error: "Ce lien d'invitation a expiré" }, 403)
     );
-    render(<SignUpForm inviteToken="tok-123" />);
+    renderWithIntl(<SignUpForm inviteToken="tok-123" />);
 
     await fillAndSubmit();
 
@@ -64,7 +65,7 @@ describe("SignUpForm", () => {
   it("renvoie vers la connexion si la connexion automatique échoue", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ id: "u1" }, 201));
     signInMock.mockResolvedValue({ ok: false, error: "CredentialsSignin" });
-    render(<SignUpForm inviteToken="tok-123" />);
+    renderWithIntl(<SignUpForm inviteToken="tok-123" />);
 
     await fillAndSubmit();
 

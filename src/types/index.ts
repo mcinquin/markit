@@ -1,4 +1,5 @@
 import type { AccountProfile } from "@/lib/account";
+import type { AppLocale } from "@/i18n/config";
 
 export interface BingoPattern {
   type: "row" | "column" | "diagonal";
@@ -57,11 +58,13 @@ declare module "next-auth" {
       email?: string | null;
       image?: string | null;
       mustChangePassword?: boolean;
+      locale?: AppLocale;
     };
   }
 
   interface User {
     mustChangePassword?: boolean;
+    locale?: AppLocale;
   }
 }
 
@@ -69,5 +72,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     id: string;
     mustChangePassword?: boolean;
+    locale?: AppLocale;
   }
 }

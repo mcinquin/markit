@@ -2,6 +2,7 @@
 
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { MarkItBrand } from "@/components/markit-logo/markit-logo";
 
@@ -12,6 +13,8 @@ type NavbarProps = {
 
 export function Navbar({ minimal = false, isAdmin = false }: NavbarProps) {
   const { data: session } = useSession();
+  const t = useTranslations("navbar");
+  const tCommon = useTranslations("common");
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -27,7 +30,7 @@ export function Navbar({ minimal = false, isAdmin = false }: NavbarProps) {
         <div className="flex items-center gap-3">
           {!minimal && (
             <p className="hidden text-sm text-ink-faint sm:block">
-              {session?.user?.name?.split(" ")[0] || "Compte"}
+              {session?.user?.name?.split(" ")[0] || t("accountFallback")}
             </p>
           )}
 
@@ -37,12 +40,12 @@ export function Navbar({ minimal = false, isAdmin = false }: NavbarProps) {
               onClick={() => setMenuOpen(!menuOpen)}
               className="flex items-center gap-2 rounded-sm border border-paper-line bg-note px-2.5 py-1.5 shadow-[1px_2px_0_rgba(15,23,42,0.06)] transition-all hover:-rotate-1 hover:border-accent"
               aria-expanded={menuOpen}
-              aria-label="Menu compte"
+              aria-label={t("accountMenu")}
             >
               <span className="flex h-7 w-7 items-center justify-center rounded-sm bg-accent text-xs font-bold text-white">
                 {session?.user?.name?.[0]?.toUpperCase() || "?"}
               </span>
-              {!minimal && isAdmin && <span className="chip-spark">Admin</span>}
+              {!minimal && isAdmin && <span className="chip-spark">{tCommon("admin")}</span>}
             </button>
 
             {menuOpen && (
@@ -58,7 +61,7 @@ export function Navbar({ minimal = false, isAdmin = false }: NavbarProps) {
                       onClick={() => setMenuOpen(false)}
                       className="block px-3 py-2 text-sm font-semibold text-ink-muted hover:bg-accent-mist hover:text-accent"
                     >
-                      Mon compte
+                      {t("myAccount")}
                     </Link>
                     {isAdmin && (
                       <Link
@@ -66,7 +69,7 @@ export function Navbar({ minimal = false, isAdmin = false }: NavbarProps) {
                         onClick={() => setMenuOpen(false)}
                         className="block px-3 py-2 text-sm font-semibold text-ink-muted hover:bg-accent-mist hover:text-accent"
                       >
-                        Administration
+                        {t("administration")}
                       </Link>
                     )}
                   </>
@@ -76,7 +79,7 @@ export function Navbar({ minimal = false, isAdmin = false }: NavbarProps) {
                   onClick={() => signOut({ callbackUrl: "/" })}
                   className="w-full px-3 py-2 text-left text-sm font-semibold text-danger hover:bg-danger-soft"
                 >
-                  Déconnexion
+                  {t("signOut")}
                 </button>
               </div>
             )}

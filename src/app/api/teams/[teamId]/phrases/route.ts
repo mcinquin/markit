@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api-errors";
 import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { getTeamActor, getTeamMembership } from "@/lib/authz";
@@ -18,12 +19,9 @@ type ReadyAuth = Extract<Awaited<ReturnType<typeof requireApiAccountReady>>, { o
 /** 404 hors de l'équipe, 403 sous le rôle ADMIN ; null si autorisé. */
 async function requirePhraseManager(auth: ReadyAuth, teamId: string) {
   const actor = await getTeamActor(auth.session.user.id, teamId, auth.profile.isAdmin);
-  if (!actor) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  if (!actor) return apiError("notFound", 404);
   if (!canManagePhrases(actor)) {
-    return NextResponse.json(
-      { error: "Seuls les admins de l'équipe peuvent modifier les phrases" },
-      { status: 403 }
-    );
+    return apiError("adminOnlyPhrases", 403);
   }
   return null;
 }
@@ -35,7 +33,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
   const { teamId } = await params;
 
   const membership = await getTeamMembership(auth.session.user.id, teamId);
-  if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  if (!membership) return apiError("notFound", 404);
 
   return NextResponse.json(await getTeamPhrases(teamId));
 }
@@ -47,7 +45,7 @@ export async function POST(req: Request, { params }: RouteContext) {
   const { teamId } = await params;
 
   const membership = await getTeamMembership(auth.session.user.id, teamId);
-  if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  if (!membership) return apiError("notFound", 404);
 
   const parsed = await parseJsonBody(req, createPhraseSchema);
   if (!parsed.ok) return parsed.response;
@@ -76,7 +74,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
   const existing = await prisma.phrase.findUnique({ where: { id: phraseId } });
 
   if (!existing || existing.isDefault || existing.teamId !== teamId) {
-    return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+    return apiError("notFound", 404);
   }
 
   const phrase = await prisma.phrase.update({
@@ -108,17 +106,11 @@ export async function DELETE(req: Request, { params }: RouteContext) {
   });
 
   if (!phrase || phrase.isDefault || phrase.teamId !== teamId) {
-    return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+    return apiError("notFound", 404);
   }
 
   if (phrase._count.cells > 0) {
-    return NextResponse.json(
-      {
-        error:
-          "Cette phrase est déjà utilisée dans une grille. Modifie-la plutôt, ou supprime d'abord la grille.",
-      },
-      { status: 409 }
-    );
+    return apiError("phraseInUse", 409);
   }
 
   await prisma.phrase.delete({ where: { id: parsed.data.phraseId } });

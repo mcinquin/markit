@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { MarkItLogo } from "@/components/markit-logo/markit-logo";
@@ -11,6 +12,8 @@ import { FormError } from "./form-feedback";
 /** Inscription sur invitation, puis connexion automatique. */
 export function SignUpForm({ inviteToken }: { inviteToken: string }) {
   const router = useRouter();
+  const t = useTranslations("signUp");
+  const tApi = useTranslations("apiClient");
   const fieldId = useId();
 
   const [name, setName] = useState("");
@@ -27,7 +30,8 @@ export function SignUpForm({ inviteToken }: { inviteToken: string }) {
     const result = await apiRequest("/api/auth/register", {
       method: "POST",
       json: { name, email, password, inviteToken },
-      fallbackError: "Erreur lors de l'inscription",
+      fallbackError: t("fallbackError"),
+      networkError: tApi("network"),
     });
     if (!result.ok) {
       setError(result.error);
@@ -51,22 +55,20 @@ export function SignUpForm({ inviteToken }: { inviteToken: string }) {
       <div className="surface w-full max-w-md rotate-1">
         <div className="mb-8">
           <MarkItLogo className="h-16 w-auto max-w-full" />
-          <h1 className="mt-4 font-display text-xl font-semibold text-ink-muted">
-            Créer ton compte
-          </h1>
-          <p className="mt-1 text-sm text-ink-faint">Tu as reçu une invitation.</p>
+          <h1 className="mt-4 font-display text-xl font-semibold text-ink-muted">{t("title")}</h1>
+          <p className="mt-1 text-sm text-ink-faint">{t("subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor={`${fieldId}-name`} className="mb-1 block text-sm font-semibold text-ink-muted">
-              Prénom
+              {t("name")}
             </label>
             <input
               id={`${fieldId}-name`}
               type="text"
               className="input"
-              placeholder="Alex"
+              placeholder={t("namePlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="given-name"
@@ -77,13 +79,13 @@ export function SignUpForm({ inviteToken }: { inviteToken: string }) {
 
           <div>
             <label htmlFor={`${fieldId}-email`} className="mb-1 block text-sm font-semibold text-ink-muted">
-              Email
+              {t("email")}
             </label>
             <input
               id={`${fieldId}-email`}
               type="email"
               className="input"
-              placeholder="toi@entreprise.com"
+              placeholder={t("emailPlaceholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -93,7 +95,7 @@ export function SignUpForm({ inviteToken }: { inviteToken: string }) {
 
           <div>
             <label htmlFor={`${fieldId}-password`} className="mb-1 block text-sm font-semibold text-ink-muted">
-              Mot de passe
+              {t("password")}
             </label>
             <input
               id={`${fieldId}-password`}
@@ -109,21 +111,21 @@ export function SignUpForm({ inviteToken }: { inviteToken: string }) {
               maxLength={128}
             />
             <p id={`${fieldId}-password-hint`} className="mt-1 text-xs text-ink-faint">
-              Minimum 12 caractères
+              {t("passwordHint", { min: 12 })}
             </p>
           </div>
 
           <FormError message={error} />
 
           <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? "Création…" : "Créer mon compte"}
+            {loading ? t("submitting") : t("submit")}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-ink-faint">
-          Déjà un compte ?{" "}
+          {t("hasAccount")}{" "}
           <Link href="/auth/signin" className="font-semibold text-accent hover:underline">
-            Se connecter
+            {t("signIn")}
           </Link>
         </p>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import type { TeamPhrase } from "@/lib/data";
 
@@ -14,6 +15,7 @@ type Props = {
 
 /** Phrase sélectionnable ; boutons modifier / supprimer pour les phrases d'équipe. */
 export function PhraseChip({ phrase, selected, editing, onClick, onEdit, onDelete }: Props) {
+  const t = useTranslations("phraseChip");
   const isHighlighted = selected || editing;
 
   return (
@@ -47,8 +49,8 @@ export function PhraseChip({ phrase, selected, editing, onClick, onEdit, onDelet
           {onEdit && (
             <button
               type="button"
-              title="Modifier"
-              aria-label={`Modifier « ${phrase.text} »`}
+              title={t("edit")}
+              aria-label={t("editLabel", { text: phrase.text })}
               onClick={onEdit}
               className="flex h-6 w-6 items-center justify-center rounded-sm text-xs font-bold text-ink-faint transition-colors hover:bg-white/70 hover:text-accent"
             >
@@ -58,8 +60,8 @@ export function PhraseChip({ phrase, selected, editing, onClick, onEdit, onDelet
           {onDelete && (
             <button
               type="button"
-              title="Supprimer"
-              aria-label={`Supprimer « ${phrase.text} »`}
+              title={t("delete")}
+              aria-label={t("deleteLabel", { text: phrase.text })}
               onClick={onDelete}
               className="flex h-6 w-6 items-center justify-center rounded-sm text-xs font-bold text-ink-faint transition-colors hover:bg-red-50 hover:text-red-500"
             >

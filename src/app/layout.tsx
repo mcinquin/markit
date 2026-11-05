@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Source_Sans_3 } from "next/font/google";
+import { getLocale, getMessages, getTranslations, getTimeZone } from "next-intl/server";
+import { toLocale } from "@/i18n/config";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -17,19 +19,31 @@ const sourceSans = Source_Sans_3({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "MarkIt – Meeting Bingo",
-  description: "Bingo de réunion en temps réel pour vos équipes.",
-  icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("metadata");
+  return {
+    title: t("title"),
+    description: t("description"),
+    icons: {
+      icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    },
+  };
+}
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const [localeRaw, messages, timeZone] = await Promise.all([
+    getLocale(),
+    getMessages(),
+    getTimeZone(),
+  ]);
+  const locale = toLocale(localeRaw);
+
   return (
-    <html lang="fr" className={`${spaceGrotesk.variable} ${sourceSans.variable}`}>
+    <html lang={locale} className={`${spaceGrotesk.variable} ${sourceSans.variable}`}>
       <body className="font-body antialiased text-ink app-shell">
-        <Providers>{children}</Providers>
+        <Providers locale={locale} messages={messages} timeZone={timeZone}>
+          {children}
+        </Providers>
       </body>
     </html>
   );

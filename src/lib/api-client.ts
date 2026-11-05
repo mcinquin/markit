@@ -7,17 +7,23 @@ type ApiRequestOptions = Omit<RequestInit, "body"> & {
   json?: unknown;
   /** Message affiché si l'API ne renvoie pas de champ `error`. */
   fallbackError?: string;
+  /** Message si `fetch` échoue (réseau). */
+  networkError?: string;
 };
-
-const NETWORK_ERROR = "Connexion impossible, réessaie";
-const DEFAULT_ERROR = "Une erreur est survenue";
 
 /**
  * `fetch` côté client qui ne lève jamais : renvoie les données ou un message d'erreur affichable.
+ * Les messages de repli doivent être déjà traduits (voir `apiClient.*` dans les catalogues).
  */
 export async function apiRequest<T = unknown>(
   url: string,
-  { json, fallbackError = DEFAULT_ERROR, headers, ...init }: ApiRequestOptions = {}
+  {
+    json,
+    fallbackError = "Une erreur est survenue",
+    networkError = "Connexion impossible, réessaie",
+    headers,
+    ...init
+  }: ApiRequestOptions = {}
 ): Promise<ApiResult<T>> {
   let res: Response;
   try {
@@ -28,7 +34,7 @@ export async function apiRequest<T = unknown>(
       body: json === undefined ? undefined : JSON.stringify(json),
     });
   } catch {
-    return { ok: false, error: NETWORK_ERROR, status: 0 };
+    return { ok: false, error: networkError, status: 0 };
   }
 
   const body: unknown = await res.json().catch(() => null);

@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+import type { NextResponse } from "next/server";
 import { getServerSession, type Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getAccountProfile, type AccountProfile } from "@/lib/account";
+import { apiError } from "@/lib/api-errors";
+
 type ApiAuthFailure = {
   ok: false;
   response: NextResponse;
@@ -16,10 +18,7 @@ export type ApiAuthResult<T extends ApiSessionAuth = ApiSessionAuth> = T | ApiAu
 export async function requireApiSession(): Promise<ApiAuthResult> {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
-    return {
-      ok: false,
-      response: NextResponse.json({ error: "Non autorisé" }, { status: 401 }),
-    };
+    return { ok: false, response: await apiError("unauthorized", 401) };
   }
   return { ok: true, session };
 }
@@ -37,20 +36,14 @@ export async function requireApiAccountReady(): Promise<ApiAuthResult<ApiAccount
   if (!profile) {
     return {
       ok: false,
-      response: NextResponse.json(
-        { error: "Session invalide, reconnecte-toi", code: "INVALID_SESSION" },
-        { status: 401 }
-      ),
+      response: await apiError("invalidSession", 401, { code: "INVALID_SESSION" }),
     };
   }
 
   if (profile.mustChangePassword) {
     return {
       ok: false,
-      response: NextResponse.json(
-        { error: "Configuration du compte requise", code: "MUST_CHANGE_PASSWORD" },
-        { status: 403 }
-      ),
+      response: await apiError("accountSetupRequired", 403, { code: "MUST_CHANGE_PASSWORD" }),
     };
   }
 
@@ -63,10 +56,7 @@ export async function requireApiAdmin(): Promise<ApiAuthResult<ApiAccountAuth>> 
   if (!auth.ok) return auth;
 
   if (!auth.profile.isAdmin) {
-    return {
-      ok: false,
-      response: NextResponse.json({ error: "Accès admin requis" }, { status: 403 }),
-    };
+    return { ok: false, response: await apiError("adminRequired", 403) };
   }
 
   return auth;
