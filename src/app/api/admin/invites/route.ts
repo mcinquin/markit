@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireApiAdmin } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { getAdminInvites } from "@/lib/data";
 import { createInviteSchema, deleteInviteSchema } from "@/lib/schemas/admin";
 import { parseJsonBody } from "@/lib/schemas/parse";
 
@@ -8,12 +9,7 @@ export async function GET() {
   const auth = await requireApiAdmin();
   if (!auth.ok) return auth.response;
 
-  const invites = await prisma.inviteToken.findMany({
-    orderBy: { expiresAt: "desc" },
-    include: { createdBy: { select: { name: true, email: true } } },
-  });
-
-  return NextResponse.json(invites);
+  return NextResponse.json(await getAdminInvites());
 }
 
 export async function POST(req: Request) {

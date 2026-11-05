@@ -2,6 +2,8 @@ const { createServer } = require("http");
 const next = require("next");
 const { Server } = require("socket.io");
 const { getToken } = require("next-auth/jwt");
+const { PrismaClient } = require("@prisma/client");
+const { PrismaPg } = require("@prisma/adapter-pg");
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = process.env.HOSTNAME || "0.0.0.0";
@@ -10,7 +12,27 @@ const port = parseInt(process.env.PORT || "3000", 10);
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
+const roomName = (cardId) => `card:${cardId}`;
+
 app.prepare().then(() => {
+  // Créé après prepare() : Next a chargé .env dans process.env
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg(process.env.DATABASE_URL),
+    log: ["warn", "error"],
+  });
+
+  /** Membre de l'équipe de la grille, ou admin (même règle que GET /api/cards/:id). */
+  async function canAccessCard(userId, cardId) {
+    const [membership, user] = await Promise.all([
+      prisma.teamMember.findFirst({
+        where: { userId, team: { cards: { some: { id: cardId } } } },
+        select: { id: true },
+      }),
+      prisma.user.findUnique({ where: { id: userId }, select: { isAdmin: true } }),
+    ]);
+    return membership !== null || user?.isAdmin === true;
+  }
+
   const httpServer = createServer();
 
   // 1. Socket.io BEFORE Next.js to intercept /api/socketio requests first
@@ -52,40 +74,56 @@ app.prepare().then(() => {
     }
   });
 
+  /** cardId → Map<socketId, { id, name }> des joueurs présents. */
   const cardRooms = new Map();
+
+  function broadcastMembers(cardId) {
+    const members = cardRooms.get(cardId);
+    io.to(roomName(cardId)).emit("members-updated", members ? Array.from(members.values()) : []);
+  }
+
+  function leaveCard(socket, cardId) {
+    const members = cardRooms.get(cardId);
+    if (!members?.delete(socket.id)) return;
+    if (members.size === 0) cardRooms.delete(cardId);
+    socket.leave(roomName(cardId));
+    broadcastMembers(cardId);
+  }
 
   io.on("connection", (socket) => {
     const { userId, userName } = socket.data;
 
-    socket.on("join-card", ({ cardId }) => {
+    socket.on("join-card", async ({ cardId } = {}) => {
       if (!cardId || typeof cardId !== "string") return;
 
-      socket.join(`card:${cardId}`);
+      try {
+        if (!(await canAccessCard(userId, cardId))) return;
+      } catch (err) {
+        console.error("[socket] join-card", err);
+        return;
+      }
+
+      socket.join(roomName(cardId));
       if (!cardRooms.has(cardId)) cardRooms.set(cardId, new Map());
       cardRooms.get(cardId).set(socket.id, { id: userId, name: userName });
-
-      const members = Array.from(cardRooms.get(cardId).values());
-      io.to(`card:${cardId}`).emit("members-updated", members);
+      broadcastMembers(cardId);
     });
 
-    socket.on("check-cell", ({ cardId, cellId, checked }) => {
-      if (!cardId || !cellId || typeof checked !== "boolean") return;
-      // Le nom vient du serveur, pas du client
-      socket.to(`card:${cardId}`).emit("cell-updated", { cellId, checked, userName });
+    socket.on("leave-card", ({ cardId } = {}) => {
+      if (typeof cardId === "string") leaveCard(socket, cardId);
     });
 
-    socket.on("bingo", ({ cardId, pattern }) => {
-      if (!cardId) return;
+    // Les cases cochées sont diffusées par POST /api/cards/:id/check, après écriture en BDD.
+
+    socket.on("bingo", ({ cardId } = {}) => {
+      if (typeof cardId !== "string" || !socket.rooms.has(roomName(cardId))) return;
       // Aux autres joueurs seulement — le local a déjà fêté au clic
-      socket.to(`card:${cardId}`).emit("bingo-achieved", { userName, pattern });
+      socket.to(roomName(cardId)).emit("bingo-achieved", { userName });
     });
 
     socket.on("disconnect", () => {
-      for (const [cardId, members] of cardRooms.entries()) {
-        if (members.has(socket.id)) {
-          members.delete(socket.id);
-          io.to(`card:${cardId}`).emit("members-updated", Array.from(members.values()));
-        }
+      for (const cardId of Array.from(cardRooms.keys())) {
+        leaveCard(socket, cardId);
       }
     });
   });

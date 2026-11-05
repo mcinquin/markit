@@ -3,10 +3,13 @@ import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { shuffleArray, getCenterPosition } from "@/lib/bingo";
 import { getTeamMembership } from "@/lib/authz";
+import { getTeamCards, playCardSelect } from "@/lib/data";
 import { createCardSchema } from "@/lib/schemas/card";
 import { parseJsonBody } from "@/lib/schemas/parse";
 
 type RouteContext = { params: Promise<{ teamId: string }> };
+
+const FREE_PHRASE_ID = "default-free";
 
 export async function GET(_req: Request, { params }: RouteContext) {
   const auth = await requireApiAccountReady();
@@ -17,21 +20,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
   const membership = await getTeamMembership(auth.session.user.id, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  const cards = await prisma.bingoCard.findMany({
-    where: { teamId },
-    include: {
-      cells: {
-        include: {
-          phrase: true,
-          checked: { include: { user: { select: { id: true, name: true } } } },
-        },
-        orderBy: { position: "asc" },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  });
-
-  return NextResponse.json(cards);
+  return NextResponse.json(await getTeamCards(teamId));
 }
 
 export async function POST(req: Request, { params }: RouteContext) {
@@ -39,8 +28,9 @@ export async function POST(req: Request, { params }: RouteContext) {
   if (!auth.ok) return auth.response;
 
   const { teamId } = await params;
+  const userId = auth.session.user.id;
 
-  const membership = await getTeamMembership(auth.session.user.id, teamId);
+  const membership = await getTeamMembership(userId, teamId);
   if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   const parsed = await parseJsonBody(req, createCardSchema);
@@ -71,78 +61,36 @@ export async function POST(req: Request, { params }: RouteContext) {
     return NextResponse.json({ error: "Certaines phrases sont invalides" }, { status: 400 });
   }
 
-  const validIds = validPhrases.map((p) => p.id);
-  const shuffled = shuffleArray(validIds).slice(0, neededPhrases);
+  const shuffled = shuffleArray(validPhrases.map((p) => p.id)).slice(0, neededPhrases);
 
-  // Phrase dédiée à la case centrale FREE (affichée ★ FREE côté client)
-  const freePhrase =
-    centerPos !== null
-      ? await prisma.phrase.upsert({
-          where: { id: "default-free" },
-          update: {},
-          create: {
-            id: "default-free",
-            text: "FREE",
-            emoji: "★",
-            isDefault: false,
-          },
-        })
-      : null;
-
-  const cellsData: { phraseId: string; position: number }[] = [];
-  let phraseIndex = 0;
-  for (let pos = 0; pos < totalCells; pos++) {
-    if (centerPos !== null && freePhrase && pos === centerPos) {
-      cellsData.push({ phraseId: freePhrase.id, position: pos });
-      continue;
-    }
-    cellsData.push({ phraseId: shuffled[phraseIndex], position: pos });
-    phraseIndex++;
+  if (centerPos !== null) {
+    // Phrase technique de la case FREE (affichée ★ FREE côté client)
+    await prisma.phrase.upsert({
+      where: { id: FREE_PHRASE_ID },
+      update: {},
+      create: { id: FREE_PHRASE_ID, text: "FREE", emoji: "★", isDefault: false },
+    });
   }
+
+  let phraseIndex = 0;
+  const cells = Array.from({ length: totalCells }, (_, position) =>
+    position === centerPos
+      ? { position, phraseId: FREE_PHRASE_ID, checked: { create: { userId } } }
+      : { position, phraseId: shuffled[phraseIndex++] }
+  );
 
   const card = await prisma.bingoCard.create({
     data: {
       teamId,
-      createdById: auth.session.user.id,
+      createdById: userId,
       label,
       rows,
       cols,
-      freeCenter: centerPos !== null ? Boolean(freeCenter) : false,
-      cells: { create: cellsData },
+      freeCenter: centerPos !== null,
+      cells: { create: cells },
     },
-    include: {
-      cells: {
-        include: {
-          phrase: true,
-          checked: { include: { user: { select: { id: true, name: true } } } },
-        },
-        orderBy: { position: "asc" },
-      },
-    },
+    select: playCardSelect,
   });
-
-  if (centerPos !== null && freeCenter) {
-    const freeCell = card.cells.find((cell) => cell.position === centerPos);
-    if (freeCell) {
-      await prisma.checkedCell.create({
-        data: { cellId: freeCell.id, userId: auth.session.user.id },
-      });
-      // Recharger pour inclure la case FREE cochée dans la réponse
-      const refreshed = await prisma.bingoCard.findUnique({
-        where: { id: card.id },
-        include: {
-          cells: {
-            include: {
-              phrase: true,
-              checked: { include: { user: { select: { id: true, name: true } } } },
-            },
-            orderBy: { position: "asc" },
-          },
-        },
-      });
-      return NextResponse.json(refreshed, { status: 201 });
-    }
-  }
 
   return NextResponse.json(card, { status: 201 });
 }

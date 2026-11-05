@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
-import { canDeleteCard, getCardIfMember } from "@/lib/authz";
-import { isAdmin } from "@/lib/admin";
+import { canDeleteOwnedResource, getCardIfMember } from "@/lib/authz";
+import { getPlayCard } from "@/lib/data";
 import { updateCardSchema } from "@/lib/schemas/card";
 import { parseJsonBody } from "@/lib/schemas/parse";
 
@@ -13,36 +13,12 @@ export async function GET(_req: Request, { params }: RouteContext) {
   if (!auth.ok) return auth.response;
 
   const { cardId } = await params;
-  const userId = auth.session.user.id;
 
-  const [access, userIsAdmin] = await Promise.all([
-    getCardIfMember(userId, cardId),
-    isAdmin(userId),
-  ]);
-  if (!access && !userIsAdmin) {
+  if (!auth.profile.isAdmin && !(await getCardIfMember(auth.session.user.id, cardId))) {
     return NextResponse.json({ error: "Introuvable" }, { status: 404 });
   }
 
-  const card = await prisma.bingoCard.findUnique({
-    where: { id: cardId },
-    include: {
-      cells: {
-        include: {
-          phrase: true,
-          checked: { include: { user: { select: { id: true, name: true } } } },
-        },
-        orderBy: { position: "asc" },
-      },
-      team: {
-        include: {
-          members: {
-            include: { user: { select: { id: true, name: true, email: true, image: true } } },
-          },
-        },
-      },
-    },
-  });
-
+  const card = await getPlayCard(cardId);
   if (!card) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
   return NextResponse.json(card);
@@ -76,15 +52,14 @@ export async function DELETE(_req: Request, { params }: RouteContext) {
   if (!auth.ok) return auth.response;
 
   const { cardId } = await params;
-  const userId = auth.session.user.id;
 
   const card = await prisma.bingoCard.findUnique({
     where: { id: cardId },
-    select: { id: true, createdById: true },
+    select: { createdById: true },
   });
   if (!card) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  if (!(await canDeleteCard(userId, cardId))) {
+  if (!canDeleteOwnedResource(auth.session.user.id, card.createdById, auth.profile.isAdmin)) {
     return NextResponse.json({ error: "Suppression non autorisée" }, { status: 403 });
   }
 

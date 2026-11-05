@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
+import { apiRequest } from "@/lib/api-client";
+import { canDeleteOwnedResource } from "@/lib/authz-rules";
 import type { DashboardTeam } from "@/types";
 
 type Props = {
@@ -24,54 +26,50 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  function canDeleteTeam(team: DashboardTeam) {
-    if (isAdmin) return true;
-    return Boolean(userId && team.createdById && team.createdById === userId);
-  }
+  const canDeleteTeam = (team: DashboardTeam) =>
+    canDeleteOwnedResource(userId, team.createdById, isAdmin);
 
   async function fetchTeams() {
-    const res = await fetch("/api/teams");
-    if (res.ok) setTeams(await res.json());
+    const result = await apiRequest<DashboardTeam[]>("/api/teams");
+    if (result.ok) setTeams(result.data);
   }
 
   async function createTeam(e: React.FormEvent) {
     e.preventDefault();
     setCreating(true);
     setError("");
-    const res = await fetch("/api/teams", {
+    const result = await apiRequest("/api/teams", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: teamName }),
+      json: { name: teamName },
+      fallbackError: "Création impossible",
     });
-    setCreating(false);
-    if (res.ok) {
+    if (result.ok) {
       await fetchTeams();
       setShowCreate(false);
       setTeamName("");
     } else {
-      const d = await res.json();
-      setError(d.error);
+      setError(result.error);
     }
+    setCreating(false);
   }
 
   async function joinTeam(e: React.FormEvent) {
     e.preventDefault();
     setJoining(true);
     setError("");
-    const res = await fetch("/api/teams/join", {
+    const result = await apiRequest("/api/teams/join", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ inviteCode }),
+      json: { inviteCode },
+      fallbackError: "Impossible de rejoindre l'équipe",
     });
-    setJoining(false);
-    if (res.ok) {
+    if (result.ok) {
       await fetchTeams();
       setShowJoin(false);
       setInviteCode("");
     } else {
-      const d = await res.json();
-      setError(d.error);
+      setError(result.error);
     }
+    setJoining(false);
   }
 
   async function deleteTeam(team: DashboardTeam) {
@@ -84,13 +82,15 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
     }
     setDeletingId(team.id);
     setError("");
-    const res = await fetch(`/api/teams/${team.id}`, { method: "DELETE" });
+    const result = await apiRequest(`/api/teams/${team.id}`, {
+      method: "DELETE",
+      fallbackError: "Suppression impossible",
+    });
     setDeletingId(null);
-    if (res.ok) {
+    if (result.ok) {
       setTeams((prev) => prev.filter((t) => t.id !== team.id));
     } else {
-      const d = await res.json().catch(() => ({}));
-      setError(d.error || "Suppression impossible");
+      setError(result.error);
     }
   }
 

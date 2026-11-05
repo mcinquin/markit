@@ -12,12 +12,6 @@ jest.mock("@/lib/prisma", () => ({
     phrase: {
       findUnique: jest.fn(),
     },
-    team: {
-      findUnique: jest.fn(),
-    },
-    user: {
-      findUnique: jest.fn(),
-    },
   },
 }));
 
@@ -27,16 +21,12 @@ import {
   getCardIfMember,
   getPhraseIfMember,
   canDeleteOwnedResource,
-  canDeleteTeam,
-  canDeleteCard,
 } from "@/lib/authz";
 
 const mockedPrisma = prisma as unknown as {
   teamMember: { findUnique: jest.Mock };
   bingoCard: { findUnique: jest.Mock };
   phrase: { findUnique: jest.Mock };
-  team: { findUnique: jest.Mock };
-  user: { findUnique: jest.Mock };
 };
 
 describe("getTeamMembership", () => {
@@ -123,47 +113,5 @@ describe("canDeleteOwnedResource", () => {
 
   it("refuse si pas de créateur et non-admin", () => {
     expect(canDeleteOwnedResource("u1", null, false)).toBe(false);
-  });
-});
-
-describe("canDeleteTeam", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it("retourne false si équipe absente", async () => {
-    mockedPrisma.team.findUnique.mockResolvedValue(null);
-    mockedPrisma.user.findUnique.mockResolvedValue({ isAdmin: false });
-    expect(await canDeleteTeam("u1", "t1")).toBe(false);
-  });
-
-  it("autorise le créateur", async () => {
-    mockedPrisma.team.findUnique.mockResolvedValue({ createdById: "u1" });
-    mockedPrisma.user.findUnique.mockResolvedValue({ isAdmin: false });
-    expect(await canDeleteTeam("u1", "t1")).toBe(true);
-  });
-
-  it("autorise l'admin sur une équipe d'autrui", async () => {
-    mockedPrisma.team.findUnique.mockResolvedValue({ createdById: "u2" });
-    mockedPrisma.user.findUnique.mockResolvedValue({ isAdmin: true });
-    expect(await canDeleteTeam("u1", "t1")).toBe(true);
-  });
-});
-
-describe("canDeleteCard", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it("refuse un membre non créateur", async () => {
-    mockedPrisma.bingoCard.findUnique.mockResolvedValue({ createdById: "u2" });
-    mockedPrisma.user.findUnique.mockResolvedValue({ isAdmin: false });
-    expect(await canDeleteCard("u1", "c1")).toBe(false);
-  });
-
-  it("autorise le créateur de la grille", async () => {
-    mockedPrisma.bingoCard.findUnique.mockResolvedValue({ createdById: "u1" });
-    mockedPrisma.user.findUnique.mockResolvedValue({ isAdmin: false });
-    expect(await canDeleteCard("u1", "c1")).toBe(true);
   });
 });

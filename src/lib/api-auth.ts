@@ -2,20 +2,15 @@ import { NextResponse } from "next/server";
 import { getServerSession, type Session } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getAccountProfile, type AccountProfile } from "@/lib/account";
-import { isAdmin } from "@/lib/admin";
-
-type ApiAuthSuccess = {
-  ok: true;
-  session: Session;
-  profile?: AccountProfile;
-};
-
 type ApiAuthFailure = {
   ok: false;
   response: NextResponse;
 };
 
-export type ApiAuthResult = ApiAuthSuccess | ApiAuthFailure;
+type ApiSessionAuth = { ok: true; session: Session };
+type ApiAccountAuth = ApiSessionAuth & { profile: AccountProfile };
+
+export type ApiAuthResult<T extends ApiSessionAuth = ApiSessionAuth> = T | ApiAuthFailure;
 
 /** Session requise ; 401 sinon. */
 export async function requireApiSession(): Promise<ApiAuthResult> {
@@ -33,7 +28,7 @@ export async function requireApiSession(): Promise<ApiAuthResult> {
  * Compte prêt (mot de passe définitif).
  * 401 si non authentifié, 403 si mustChangePassword.
  */
-export async function requireApiAccountReady(): Promise<ApiAuthResult> {
+export async function requireApiAccountReady(): Promise<ApiAuthResult<ApiAccountAuth>> {
   const auth = await requireApiSession();
   if (!auth.ok) return auth;
 
@@ -63,11 +58,11 @@ export async function requireApiAccountReady(): Promise<ApiAuthResult> {
 }
 
 /** Admin + compte prêt. */
-export async function requireApiAdmin(): Promise<ApiAuthResult> {
+export async function requireApiAdmin(): Promise<ApiAuthResult<ApiAccountAuth>> {
   const auth = await requireApiAccountReady();
   if (!auth.ok) return auth;
 
-  if (!(await isAdmin(auth.session.user.id))) {
+  if (!auth.profile.isAdmin) {
     return {
       ok: false,
       response: NextResponse.json({ error: "Accès admin requis" }, { status: 403 }),

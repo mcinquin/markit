@@ -2,25 +2,17 @@
 
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MarkItBrand } from "@/components/markit-logo/markit-logo";
 
 type NavbarProps = {
   minimal?: boolean;
+  isAdmin?: boolean;
 };
 
-export function Navbar({ minimal = false }: NavbarProps) {
+export function Navbar({ minimal = false, isAdmin = false }: NavbarProps) {
   const { data: session } = useSession();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    if (!session?.user?.id || minimal) return;
-    fetch("/api/admin/me")
-      .then((r) => r.json())
-      .then((d) => setIsAdmin(d.isAdmin === true))
-      .catch(() => {});
-  }, [session?.user?.id, minimal]);
 
   return (
     <nav className="sticky top-0 z-50 border-b border-paper-line bg-note/90 backdrop-blur-md shadow-[0_2px_0_rgba(15,23,42,0.04)]">
