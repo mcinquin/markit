@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api-errors";
 import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { shuffleArray, getCenterPosition } from "@/lib/bingo";
@@ -18,7 +19,7 @@ export async function GET(_req: Request, { params }: RouteContext) {
   const { teamId } = await params;
 
   const membership = await getTeamMembership(auth.session.user.id, teamId);
-  if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  if (!membership) return apiError("notFound", 404);
 
   return NextResponse.json(await getTeamCards(teamId));
 }
@@ -31,7 +32,7 @@ export async function POST(req: Request, { params }: RouteContext) {
   const userId = auth.session.user.id;
 
   const membership = await getTeamMembership(userId, teamId);
-  if (!membership) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  if (!membership) return apiError("notFound", 404);
 
   const parsed = await parseJsonBody(req, createCardSchema);
   if (!parsed.ok) return parsed.response;
@@ -43,10 +44,7 @@ export async function POST(req: Request, { params }: RouteContext) {
   const neededPhrases = centerPos !== null ? totalCells - 1 : totalCells;
 
   if (phraseIds.length < neededPhrases) {
-    return NextResponse.json(
-      { error: `Il faut au moins ${neededPhrases} phrases` },
-      { status: 400 }
-    );
+    return apiError("notEnoughPhrases", 400, { values: { count: neededPhrases } });
   }
 
   const validPhrases = await prisma.phrase.findMany({
@@ -58,7 +56,7 @@ export async function POST(req: Request, { params }: RouteContext) {
   });
 
   if (validPhrases.length < neededPhrases) {
-    return NextResponse.json({ error: "Certaines phrases sont invalides" }, { status: 400 });
+    return apiError("invalidPhrases", 400);
   }
 
   const shuffled = shuffleArray(validPhrases.map((p) => p.id)).slice(0, neededPhrases);

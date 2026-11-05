@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api-errors";
 import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { getCardIfMember, getTeamActor } from "@/lib/authz";
@@ -16,11 +17,11 @@ export async function GET(_req: Request, { params }: RouteContext) {
   const { cardId } = await params;
 
   if (!auth.profile.isAdmin && !(await getCardIfMember(auth.session.user.id, cardId))) {
-    return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+    return apiError("notFound", 404);
   }
 
   const card = await getPlayCard(cardId);
-  if (!card) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  if (!card) return apiError("notFound", 404);
 
   return NextResponse.json(card);
 }
@@ -32,7 +33,7 @@ export async function PATCH(req: Request, { params }: RouteContext) {
   const { cardId } = await params;
 
   const access = await getCardIfMember(auth.session.user.id, cardId);
-  if (!access) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  if (!access) return apiError("notFound", 404);
 
   const parsed = await parseJsonBody(req, updateCardSchema);
   if (!parsed.ok) return parsed.response;
@@ -58,13 +59,13 @@ export async function DELETE(_req: Request, { params }: RouteContext) {
     where: { id: cardId },
     select: { teamId: true, createdById: true },
   });
-  if (!card) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  if (!card) return apiError("notFound", 404);
 
   const actor = await getTeamActor(auth.session.user.id, card.teamId, auth.profile.isAdmin);
-  if (!actor) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  if (!actor) return apiError("notFound", 404);
 
   if (!canDeleteCard(actor, card.createdById)) {
-    return NextResponse.json({ error: "Suppression non autorisée" }, { status: 403 });
+    return apiError("deleteForbidden", 403);
   }
 
   await prisma.bingoCard.delete({ where: { id: cardId } });

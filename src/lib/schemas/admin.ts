@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { errorKey as msg } from "@/lib/error-keys";
 
 export const createInviteSchema = z.object({
   note: z.string().trim().max(100).optional().nullable(),
@@ -6,5 +7,5 @@ export const createInviteSchema = z.object({
 });
 
 export const deleteInviteSchema = z.object({
-  id: z.string({ error: "ID requis" }).min(1, "ID requis"),
+  id: z.string({ error: msg("idRequired") }).min(1, msg("idRequired")),
 });

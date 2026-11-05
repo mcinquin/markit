@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiRequest } from "@/lib/api-client";
-import { isTeamRole, ROLE_LABELS } from "@/lib/team-roles";
+import { isTeamRole } from "@/lib/team-roles";
 import type { AdminInvite, AdminUser } from "@/types";
 
 type Tab = "users" | "invites";
@@ -14,6 +15,11 @@ type Props = {
 };
 
 export function AdminClient({ initialUsers, initialInvites }: Props) {
+  const t = useTranslations("admin");
+  const tCommon = useTranslations("common");
+  const tRoles = useTranslations("roles");
+  const tApi = useTranslations("apiClient");
+  const format = useFormatter();
   const [activeTab, setActiveTab] = useState<Tab>("users");
   const [invites, setInvites] = useState(initialInvites);
   const [users] = useState(initialUsers);
@@ -35,7 +41,8 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
     const result = await apiRequest("/api/admin/invites", {
       method: "POST",
       json: { note, validityDays },
-      fallbackError: "Impossible de générer l'invitation",
+      fallbackError: t("createFailed"),
+      networkError: tApi("network"),
     });
     if (result.ok) {
       await fetchInvites();
@@ -47,12 +54,13 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
   }
 
   async function revokeInvite(id: string) {
-    if (!confirm("Révoquer ce lien d'invitation ?")) return;
+    if (!confirm(t("confirmRevoke"))) return;
     setError("");
     const result = await apiRequest("/api/admin/invites", {
       method: "DELETE",
       json: { id },
-      fallbackError: "Impossible de supprimer l'invitation",
+      fallbackError: t("deleteFailed"),
+      networkError: tApi("network"),
     });
     if (!result.ok) {
       setError(result.error);
@@ -71,7 +79,7 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
       setCopiedId(invite.id);
       setTimeout(() => setCopiedId(null), 2000);
     } catch {
-      setError("Copie impossible depuis ce navigateur");
+      setError(t("copyFailed"));
     }
   }
 
@@ -86,10 +94,11 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="font-display text-3xl font-semibold text-ink">Administration<span className="text-accent">.</span></h1>
-        <p className="mt-1 text-ink-faint">
-          {users.length} utilisateur{users.length !== 1 ? "s" : ""}
-        </p>
+        <h1 className="font-display text-3xl font-semibold text-ink">
+          {t("title")}
+          <span className="text-accent">.</span>
+        </h1>
+        <p className="mt-1 text-ink-faint">{t("userCount", { count: users.length })}</p>
       </div>
 
       {error && (
@@ -101,8 +110,8 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
       <div className="mb-8 flex gap-1 border-b border-paper-line">
         {(
           [
-            ["users", "Utilisateurs"],
-            ["invites", "Invitations"],
+            ["users", t("tabs.users")],
+            ["invites", t("tabs.invites")],
           ] as [Tab, string][]
         ).map(([tab, label]) => (
           <button
@@ -123,7 +132,7 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
       {activeTab === "users" && (
         <div>
           {users.length === 0 ? (
-            <div className="surface py-12 text-center text-ink-faint">Aucun utilisateur</div>
+            <div className="surface py-12 text-center text-ink-faint">{t("noUsers")}</div>
           ) : (
             <ul className="space-y-2">
               {users.map((user) => (
@@ -135,18 +144,17 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-semibold text-ink">{user.name ?? "—"}</p>
                       {user.isAdmin && (
-                        <span className="chip-spark">
-                          Admin
-                        </span>
+                        <span className="chip-spark">{tCommon("admin")}</span>
                       )}
                     </div>
                     <p className="text-sm text-ink-faint">{user.email}</p>
                     <p className="mt-0.5 text-xs text-ink-faint">
-                      Inscrit le{" "}
-                      {new Date(user.createdAt).toLocaleDateString("fr-FR", {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
+                      {t("registeredOn", {
+                        date: format.dateTime(new Date(user.createdAt), {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        }),
                       })}
                     </p>
                     {user.teams.length > 0 ? (
@@ -156,13 +164,13 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
                             key={team.id}
                             className="chip"
                           >
-                            <span className="text-accent">{isTeamRole(role) ? ROLE_LABELS[role] : role}</span>
+                            <span className="text-accent">{isTeamRole(role) ? tRoles(role) : role}</span>
                             {team.name}
                           </span>
                         ))}
                       </div>
                     ) : (
-                      <p className="mt-2 text-xs italic text-ink-faint">Aucune équipe</p>
+                      <p className="mt-2 text-xs italic text-ink-faint">{t("noTeam")}</p>
                     )}
                   </div>
                 </li>
@@ -175,26 +183,20 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
       {activeTab === "invites" && (
         <div>
           <div className="surface mb-8 -rotate-1">
-            <h2 className="mb-4 font-display text-lg font-semibold text-ink">
-              Générer un lien d&apos;invitation
-            </h2>
+            <h2 className="mb-4 font-display text-lg font-semibold text-ink">{t("generateTitle")}</h2>
             <form onSubmit={createInvite} className="flex flex-wrap items-end gap-3">
               <div className="min-w-[200px] flex-1">
-                <label className="mb-1 block text-sm font-semibold text-ink-muted">
-                  Note (optionnel)
-                </label>
+                <label className="mb-1 block text-sm font-semibold text-ink-muted">{t("note")}</label>
                 <input
                   className="input"
-                  placeholder="Pour Marie du pôle design"
+                  placeholder={t("notePlaceholder")}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   maxLength={100}
                 />
               </div>
               <div className="w-32">
-                <label className="mb-1 block text-sm font-semibold text-ink-muted">
-                  Validité (jours)
-                </label>
+                <label className="mb-1 block text-sm font-semibold text-ink-muted">{t("validity")}</label>
                 <input
                   type="number"
                   className="input text-center"
@@ -207,7 +209,7 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
                 />
               </div>
               <button type="submit" className="btn-primary" disabled={creating}>
-                {creating ? "…" : "Générer"}
+                {creating ? "…" : t("generate")}
               </button>
             </form>
           </div>
@@ -215,10 +217,10 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
           <div className="space-y-8">
             <section>
               <h2 className="mb-3 font-display text-base font-semibold text-ink">
-                Actives ({activeInvites.length})
+                {t("activeInvites", { count: activeInvites.length })}
               </h2>
               {activeInvites.length === 0 ? (
-                <p className="text-sm italic text-ink-faint">Aucune invitation active</p>
+                <p className="text-sm italic text-ink-faint">{t("noActiveInvites")}</p>
               ) : (
                 <div className="space-y-2">
                   <AnimatePresence>
@@ -240,7 +242,7 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
             {usedInvites.length > 0 && (
               <section>
                 <h2 className="mb-3 font-display text-base font-semibold text-ink-muted">
-                  Utilisées ({usedInvites.length})
+                  {t("usedInvites", { count: usedInvites.length })}
                 </h2>
                 <div className="space-y-2">
                   {usedInvites.map((invite) => (
@@ -258,7 +260,7 @@ export function AdminClient({ initialUsers, initialInvites }: Props) {
             {expiredInvites.length > 0 && (
               <section>
                 <h2 className="mb-3 font-display text-base font-semibold text-ink-faint">
-                  Expirées ({expiredInvites.length})
+                  {t("expiredInvites", { count: expiredInvites.length })}
                 </h2>
                 <div className="space-y-2">
                   {expiredInvites.map((invite) => (
@@ -292,11 +294,27 @@ function InviteRow({
   onCopy?: () => void;
   onRevoke: () => void;
 }) {
-  const expiresDate = new Date(invite.expiresAt).toLocaleDateString("fr-FR", {
+  const t = useTranslations("admin");
+  const tCommon = useTranslations("common");
+  const format = useFormatter();
+  const expiresDate = format.dateTime(new Date(invite.expiresAt), {
     day: "numeric",
     month: "short",
     year: "numeric",
   });
+
+  const statusText =
+    status === "used"
+      ? t("usedOn", {
+          date: format.dateTime(new Date(invite.usedAt!), {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          }),
+        })
+      : status === "expired"
+        ? t("expiredOn", { date: expiresDate })
+        : t("expiresOn", { date: expiresDate });
 
   return (
     <motion.div
@@ -310,25 +328,19 @@ function InviteRow({
       <div className="min-w-0 flex-1">
         {invite.note && <p className="text-sm font-semibold text-ink">{invite.note}</p>}
         <p className="truncate font-mono text-xs text-ink-faint">
-          token: {invite.token.slice(0, 16)}…
+          {t("token", { token: invite.token.slice(0, 16) })}
         </p>
-        <p className="mt-0.5 text-xs text-ink-faint">
-          {status === "used"
-            ? `Utilisé le ${new Date(invite.usedAt!).toLocaleDateString("fr-FR")}`
-            : status === "expired"
-              ? `Expiré le ${expiresDate}`
-              : `Expire le ${expiresDate}`}
-        </p>
+        <p className="mt-0.5 text-xs text-ink-faint">{statusText}</p>
       </div>
 
       <div className="flex flex-shrink-0 gap-2">
         {status === "active" && onCopy && (
           <button type="button" onClick={onCopy} className="btn-secondary py-1.5 px-3 text-sm">
-            {copied ? "Copié" : "Copier"}
+            {copied ? tCommon("copied") : tCommon("copy")}
           </button>
         )}
         <button type="button" onClick={onRevoke} className="btn-danger py-1.5 px-3 text-sm">
-          Supprimer
+          {tCommon("delete")}
         </button>
       </div>
     </motion.div>

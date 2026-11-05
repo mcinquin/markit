@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import type { PlayCell } from "@/lib/data";
 
@@ -40,6 +41,7 @@ function getCornerClassName({ isFree, isChecked, isWinning }: Pick<Props, "isFre
 
 /** Case post-it de la grille de jeu. */
 export function BingoCell({ cell, isChecked, isFree, isWinning, onClick, cols, tilt }: Props) {
+  const t = useTranslations("play");
   const fontSize = cols <= 4 ? "text-sm" : cols <= 6 ? "text-xs" : "text-[10px]";
   const emojiSize = cols <= 4 ? "text-2xl" : cols <= 6 ? "text-xl" : "text-base";
   const checkedBy = cell.checked[0]?.user.name?.split(" ")[0] || "?";
@@ -86,7 +88,7 @@ export function BingoCell({ cell, isChecked, isFree, isWinning, onClick, cols, t
           <span aria-hidden className={emojiSize}>
             ★
           </span>
-          <span className={`font-display font-bold ${fontSize}`}>FREE</span>
+          <span className={`font-display font-bold ${fontSize}`}>{t("free")}</span>
         </>
       ) : (
         <>

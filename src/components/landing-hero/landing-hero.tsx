@@ -2,21 +2,23 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { MarkItLogo } from "@/components/markit-logo/markit-logo";
 
-const DEMO_PHRASES = [
-  "Quick win",
-  "On est alignés ?",
-  "Synergies",
-  "Deep dive",
-  "Roadmap",
-  "FREE",
-  "KPIs",
-  "Agile",
-  "Offline",
-];
+const DEMO_PHRASE_KEYS = [
+  "quickWin",
+  "aligned",
+  "synergies",
+  "deepDive",
+  "roadmap",
+  "free",
+  "kpis",
+  "agile",
+  "offline",
+] as const;
 
 export function LandingHero() {
+  const t = useTranslations("landing");
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -33,13 +35,14 @@ export function LandingHero() {
         }`}
       >
         <div className="absolute inset-y-0 right-0 grid w-full grid-cols-3 gap-2 p-4 lg:w-[58%] lg:gap-3 lg:p-8 lg:pl-2">
-          {DEMO_PHRASES.map((text, i) => {
-            const isFree = text === "FREE";
+          {DEMO_PHRASE_KEYS.map((key, i) => {
+            const text = t(`demoPhrases.${key}`);
+            const isFree = key === "free";
             const isChecked = isFree || i === 1 || i === 4 || i === 7;
             const tilt = i % 3 === 0 ? "rotate-2" : i % 3 === 1 ? "-rotate-1" : "rotate-1";
             return (
               <div
-                key={text}
+                key={key}
                 className={`relative flex items-center justify-center overflow-hidden rounded-sm border p-3 text-center text-[11px] font-semibold tracking-tight shadow-[2px_3px_0_rgba(15,23,42,0.1)] transition-all duration-500 sm:p-5 sm:text-sm ${tilt} ${
                   isChecked
                     ? isFree
@@ -70,18 +73,17 @@ export function LandingHero() {
         >
           <MarkItLogo className="h-24 w-auto max-w-[280px] sm:h-28" />
           <h1 className="mt-6 font-display text-2xl font-semibold leading-snug text-ink-muted sm:text-3xl">
-            Le bingo qui sauve les réunions interminables.
+            {t("tagline")}
           </h1>
           <p className="mt-4 max-w-md text-base leading-relaxed text-ink-faint sm:text-lg">
-            Compose ta grille, coche en live avec l&apos;équipe, et crie bingo avant la fin du
-            «&nbsp;quick sync&nbsp;».
+            {t("pitch")}
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link href="/auth/signin" className="btn-primary px-8 text-base">
-              C&apos;est parti
+              {t("cta")}
             </Link>
           </div>
-          <p className="mt-4 text-sm text-ink-faint">Sur invitation — pas de spam, juste du bingo.</p>
+          <p className="mt-4 text-sm text-ink-faint">{t("inviteOnly")}</p>
         </div>
       </div>
     </section>

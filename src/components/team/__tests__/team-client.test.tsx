@@ -1,9 +1,10 @@
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { TeamActor } from "@/lib/authz-rules";
 import type { TeamCardSummary, TeamOverview } from "@/lib/data";
 import type { TeamRole } from "@/lib/team-roles";
 import { jsonResponse, mockFetch, routerMock, sentJson } from "@/test-utils/mocks";
+import { renderWithIntl } from "@/test-utils/i18n";
 import { TeamClient } from "../team-client";
 
 jest.mock("next/navigation", () => ({
@@ -60,7 +61,7 @@ describe("TeamClient", () => {
   });
 
   it("affiche l'équipe et la progression des grilles", () => {
-    render(<TeamClient team={team} initialCards={cards} actor={member} />);
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={member} />);
 
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Produit");
     expect(screen.getByText(/3 membres · 2 grilles/)).toBeInTheDocument();
@@ -69,7 +70,7 @@ describe("TeamClient", () => {
   });
 
   it("ne propose à un MEMBER que la suppression de ses propres grilles", () => {
-    render(<TeamClient team={team} initialCards={cards} actor={member} />);
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={member} />);
 
     expect(screen.queryByRole("button", { name: "Supprimer l'équipe" })).not.toBeInTheDocument();
     expect(within(cardItem("Grille c1")).getByRole("button", { name: "Supprimer" })).toBeInTheDocument();
@@ -77,7 +78,7 @@ describe("TeamClient", () => {
   });
 
   it("propose à un ADMIN toutes les grilles, mais pas l'équipe", () => {
-    render(<TeamClient team={team} initialCards={cards} actor={actor("me", "ADMIN")} />);
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={actor("me", "ADMIN")} />);
 
     expect(screen.queryByRole("button", { name: "Supprimer l'équipe" })).not.toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Supprimer" })).toHaveLength(2);
@@ -85,7 +86,7 @@ describe("TeamClient", () => {
 
   it("propose toutes les suppressions à l'OWNER et à l'admin du site", () => {
     for (const who of [owner, siteAdmin]) {
-      const { unmount } = render(<TeamClient team={team} initialCards={cards} actor={who} />);
+      const { unmount } = renderWithIntl(<TeamClient team={team} initialCards={cards} actor={who} />);
       expect(screen.getByRole("button", { name: "Supprimer l'équipe" })).toBeInTheDocument();
       expect(screen.getAllByRole("button", { name: "Supprimer" })).toHaveLength(2);
       unmount();
@@ -94,7 +95,7 @@ describe("TeamClient", () => {
 
   it("supprime une grille après confirmation", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ ok: true }));
-    render(<TeamClient team={team} initialCards={cards} actor={member} />);
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={member} />);
 
     await userEvent.click(within(cardItem("Grille c1")).getByRole("button", { name: "Supprimer" }));
 
@@ -104,7 +105,7 @@ describe("TeamClient", () => {
 
   it("garde la grille et affiche l'erreur si la suppression échoue", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ error: "Suppression non autorisée" }, 403));
-    render(<TeamClient team={team} initialCards={cards} actor={member} />);
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={member} />);
 
     await userEvent.click(within(cardItem("Grille c1")).getByRole("button", { name: "Supprimer" }));
 
@@ -114,7 +115,7 @@ describe("TeamClient", () => {
 
   it("n'appelle pas l'API si l'utilisateur annule", async () => {
     jest.spyOn(window, "confirm").mockReturnValue(false);
-    render(<TeamClient team={team} initialCards={cards} actor={owner} />);
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={owner} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Supprimer l'équipe" }));
 
@@ -131,7 +132,7 @@ describe("TeamClient — membres", () => {
   });
 
   it("affiche les rôles sans sélecteur pour un MEMBER", () => {
-    render(<TeamClient team={team} initialCards={cards} actor={member} />);
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={member} />);
 
     const list = screen.getByRole("region", { name: "Membres" });
     expect(within(list).getByText("Propriétaire")).toBeInTheDocument();
@@ -139,7 +140,7 @@ describe("TeamClient — membres", () => {
   });
 
   it("donne un sélecteur de rôle à l'OWNER et protège le dernier OWNER", () => {
-    render(<TeamClient team={team} initialCards={cards} actor={owner} />);
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={owner} />);
 
     expect(screen.getAllByRole("combobox")).toHaveLength(3);
     const ownerSelect = screen.getByRole("combobox", { name: "Rôle de Olga" });
@@ -149,7 +150,7 @@ describe("TeamClient — membres", () => {
 
   it("change le rôle d'un membre", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ id: "m-other", role: "ADMIN" }));
-    render(<TeamClient team={team} initialCards={cards} actor={owner} />);
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={owner} />);
 
     const select = screen.getByRole("combobox", { name: "Rôle de Sam" });
     await userEvent.selectOptions(select, "ADMIN");
@@ -164,7 +165,7 @@ describe("TeamClient — membres", () => {
 
   it("rétablit le rôle et affiche l'erreur si l'API refuse", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ error: "Refusé" }, 403));
-    render(<TeamClient team={team} initialCards={cards} actor={owner} />);
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={owner} />);
 
     const select = screen.getByRole("combobox", { name: "Rôle de Sam" });
     await userEvent.selectOptions(select, "ADMIN");

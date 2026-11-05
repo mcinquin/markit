@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api-errors";
 import { requireApiAccountReady } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { getCardIfMember } from "@/lib/authz";
@@ -16,7 +17,7 @@ export async function POST(req: Request, { params }: RouteContext) {
   const { user } = auth.session;
 
   const access = await getCardIfMember(user.id, cardId);
-  if (!access) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+  if (!access) return apiError("notFound", 404);
 
   const parsed = await parseJsonBody(req, checkCellSchema);
   if (!parsed.ok) return parsed.response;
@@ -27,7 +28,7 @@ export async function POST(req: Request, { params }: RouteContext) {
     where: { id: cellId, cardId },
     select: { id: true },
   });
-  if (!cell) return NextResponse.json({ error: "Case introuvable" }, { status: 404 });
+  if (!cell) return apiError("cellNotFound", 404);
 
   const userName = user.name || user.email || "?";
 

@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithIntl } from "@/test-utils/i18n";
 import userEvent from "@testing-library/user-event";
 import type { PlayCell } from "@/lib/data";
 import { BingoCell } from "../bingo-cell";
@@ -17,7 +18,7 @@ const checkedCell: PlayCell = {
 
 function renderCell(props: Partial<React.ComponentProps<typeof BingoCell>> = {}) {
   const onClick = jest.fn();
-  render(
+  renderWithIntl(
     <BingoCell
       cell={cell}
       isChecked={false}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiRequest } from "@/lib/api-client";
 import { canDeleteTeam as canDeleteTeamRule } from "@/lib/authz-rules";
@@ -16,6 +17,9 @@ type Props = {
 
 export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
   const { data: session } = useSession();
+  const t = useTranslations("dashboard");
+  const tCommon = useTranslations("common");
+  const tApi = useTranslations("apiClient");
   const userId = session?.user?.id;
   const [teams, setTeams] = useState(initialTeams);
   const [showCreate, setShowCreate] = useState(false);
@@ -37,7 +41,10 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
   };
 
   async function fetchTeams() {
-    const result = await apiRequest<DashboardTeam[]>("/api/teams");
+    const result = await apiRequest<DashboardTeam[]>("/api/teams", {
+      fallbackError: tApi("fallback"),
+      networkError: tApi("network"),
+    });
     if (result.ok) setTeams(result.data);
   }
 
@@ -48,7 +55,8 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
     const result = await apiRequest("/api/teams", {
       method: "POST",
       json: { name: teamName },
-      fallbackError: "Création impossible",
+      fallbackError: t("createFailed"),
+      networkError: tApi("network"),
     });
     if (result.ok) {
       await fetchTeams();
@@ -67,7 +75,8 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
     const result = await apiRequest("/api/teams/join", {
       method: "POST",
       json: { inviteCode },
-      fallbackError: "Impossible de rejoindre l'équipe",
+      fallbackError: t("joinFailed"),
+      networkError: tApi("network"),
     });
     if (result.ok) {
       await fetchTeams();
@@ -80,22 +89,18 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
   }
 
   async function deleteTeam(team: DashboardTeam) {
-    if (
-      !confirm(
-        `Supprimer l'équipe « ${team.name} » et toutes ses grilles ? Cette action est définitive.`
-      )
-    ) {
-      return;
-    }
+    if (!confirm(t("confirmDeleteTeam", { name: team.name }))) return;
+
     setDeletingId(team.id);
     setError("");
     const result = await apiRequest(`/api/teams/${team.id}`, {
       method: "DELETE",
-      fallbackError: "Suppression impossible",
+      fallbackError: t("deleteFailed"),
+      networkError: tApi("network"),
     });
     setDeletingId(null);
     if (result.ok) {
-      setTeams((prev) => prev.filter((t) => t.id !== team.id));
+      setTeams((prev) => prev.filter((item) => item.id !== team.id));
     } else {
       setError(result.error);
     }
@@ -106,9 +111,10 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-semibold text-ink">
-            Mes équipes<span className="text-accent">.</span>
+            {t("title")}
+            <span className="text-accent">.</span>
           </h1>
-          <p className="mt-1 text-ink-faint">Choisis ton camp et lance une grille</p>
+          <p className="mt-1 text-ink-faint">{t("subtitle")}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -120,7 +126,7 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
             }}
             className="btn-secondary"
           >
-            Rejoindre
+            {t("join")}
           </button>
           <button
             type="button"
@@ -131,7 +137,7 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
             }}
             className="btn-primary"
           >
-            Créer
+            {t("create")}
           </button>
         </div>
       </div>
@@ -147,12 +153,10 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
             {showCreate && (
               <form onSubmit={createTeam} className="flex flex-wrap items-end gap-3">
                 <div className="min-w-[200px] flex-1">
-                  <label className="mb-1 block text-sm font-semibold text-ink-muted">
-                    Nom de l&apos;équipe
-                  </label>
+                  <label className="mb-1 block text-sm font-semibold text-ink-muted">{t("teamName")}</label>
                   <input
                     className="input"
-                    placeholder="Équipe Produit"
+                    placeholder={t("teamNamePlaceholder")}
                     value={teamName}
                     onChange={(e) => setTeamName(e.target.value)}
                     autoFocus
@@ -160,10 +164,10 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
                   />
                 </div>
                 <button type="submit" className="btn-primary" disabled={creating}>
-                  {creating ? "Création…" : "Créer"}
+                  {creating ? t("creating") : t("create")}
                 </button>
                 <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary">
-                  Annuler
+                  {tCommon("cancel")}
                 </button>
               </form>
             )}
@@ -171,12 +175,10 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
             {showJoin && (
               <form onSubmit={joinTeam} className="flex flex-wrap items-end gap-3">
                 <div className="min-w-[200px] flex-1">
-                  <label className="mb-1 block text-sm font-semibold text-ink-muted">
-                    Code d&apos;invitation
-                  </label>
+                  <label className="mb-1 block text-sm font-semibold text-ink-muted">{t("inviteCode")}</label>
                   <input
                     className="input"
-                    placeholder="Colle le code ici"
+                    placeholder={t("inviteCodePlaceholder")}
                     value={inviteCode}
                     onChange={(e) => setInviteCode(e.target.value)}
                     autoFocus
@@ -184,10 +186,10 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
                   />
                 </div>
                 <button type="submit" className="btn-primary" disabled={joining}>
-                  {joining ? "…" : "Rejoindre"}
+                  {joining ? "…" : t("join")}
                 </button>
                 <button type="button" onClick={() => setShowJoin(false)} className="btn-secondary">
-                  Annuler
+                  {tCommon("cancel")}
                 </button>
               </form>
             )}
@@ -203,10 +205,8 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
 
       {teams.length === 0 ? (
         <div className="surface py-14 text-center">
-          <h2 className="font-display text-xl font-semibold text-ink-muted">
-            Personne ici… pour l&apos;instant
-          </h2>
-          <p className="mt-1 text-ink-faint">Crée ou rejoins une équipe pour ouvrir le bal.</p>
+          <h2 className="font-display text-xl font-semibold text-ink-muted">{t("emptyTitle")}</h2>
+          <p className="mt-1 text-ink-faint">{t("emptySubtitle")}</p>
         </div>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -222,13 +222,11 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
                   </span>
                   <div>
                     <h2 className="font-display text-lg font-semibold text-ink">{team.name}</h2>
-                    <p className="text-sm text-ink-faint">
-                      {team.members.length} membre{team.members.length > 1 ? "s" : ""}
-                    </p>
+                    <p className="text-sm text-ink-faint">{t("memberCount", { count: team.members.length })}</p>
                   </div>
                 </div>
                 <p className="mt-4 text-sm font-semibold text-accent">
-                  {team._count.cards} grille{team._count.cards !== 1 ? "s" : ""} →
+                  {t("cardCount", { count: team._count.cards })} →
                 </p>
               </Link>
               {canDeleteTeam(team) && (
@@ -242,7 +240,7 @@ export function DashboardClient({ initialTeams, isAdmin = false }: Props) {
                     void deleteTeam(team);
                   }}
                 >
-                  {deletingId === team.id ? "…" : "Supprimer"}
+                  {deletingId === team.id ? "…" : tCommon("delete")}
                 </button>
               )}
             </li>

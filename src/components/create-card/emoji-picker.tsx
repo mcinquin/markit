@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { EMOJI_CATEGORIES } from "@/lib/phrase-emojis";
 
@@ -13,10 +14,12 @@ type Props = {
 
 /** Bouton + popover de sélection d'emoji (fermeture au clic extérieur et à Échap). */
 export function EmojiPicker({ value, onChange, open, onOpenChange }: Props) {
+  const t = useTranslations("emojiPicker");
   const [categoryId, setCategoryId] = useState(EMOJI_CATEGORIES[0].id);
   const containerRef = useRef<HTMLDivElement>(null);
   const activeCategory =
     EMOJI_CATEGORIES.find((category) => category.id === categoryId) ?? EMOJI_CATEGORIES[0];
+  const activeLabel = t(`categories.${activeCategory.id}`);
 
   useEffect(() => {
     if (!open) return;
@@ -48,7 +51,7 @@ export function EmojiPicker({ value, onChange, open, onOpenChange }: Props) {
       <button
         type="button"
         className="input flex w-12 flex-none items-center justify-center px-0 text-xl hover:border-accent"
-        aria-label="Choisir un emoji"
+        aria-label={t("choose")}
         aria-expanded={open}
         onClick={() => onOpenChange(!open)}
       >
@@ -65,41 +68,42 @@ export function EmojiPicker({ value, onChange, open, onOpenChange }: Props) {
             className="absolute left-0 top-full z-20 mt-2 w-80 rounded-sm border border-paper-line bg-note p-3 shadow-[3px_4px_0_rgba(15,23,42,0.12)] sm:w-96"
           >
             <div className="mb-2 flex items-center justify-between">
-              <p className="text-xs font-bold uppercase tracking-wide text-ink-faint">
-                Choisir un emoji
-              </p>
+              <p className="text-xs font-bold uppercase tracking-wide text-ink-faint">{t("choose")}</p>
               {value && (
                 <button
                   type="button"
                   className="text-xs font-bold text-ink-faint hover:text-accent"
                   onClick={() => select("")}
                 >
-                  Effacer
+                  {t("clear")}
                 </button>
               )}
             </div>
 
             <div className="mb-2 flex gap-1 overflow-x-auto pb-1">
-              {EMOJI_CATEGORIES.map((category) => (
-                <button
-                  key={category.id}
-                  type="button"
-                  title={category.label}
-                  aria-label={category.label}
-                  aria-pressed={category.id === activeCategory.id}
-                  className={`flex h-8 w-8 flex-none items-center justify-center rounded-sm text-base transition-colors ${
-                    category.id === activeCategory.id
-                      ? "bg-accent-soft ring-1 ring-accent/40"
-                      : "hover:bg-accent-mist"
-                  }`}
-                  onClick={() => setCategoryId(category.id)}
-                >
-                  {category.icon}
-                </button>
-              ))}
+              {EMOJI_CATEGORIES.map((category) => {
+                const label = t(`categories.${category.id}`);
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    title={label}
+                    aria-label={label}
+                    aria-pressed={category.id === activeCategory.id}
+                    className={`flex h-8 w-8 flex-none items-center justify-center rounded-sm text-base transition-colors ${
+                      category.id === activeCategory.id
+                        ? "bg-accent-soft ring-1 ring-accent/40"
+                        : "hover:bg-accent-mist"
+                    }`}
+                    onClick={() => setCategoryId(category.id)}
+                  >
+                    {category.icon}
+                  </button>
+                );
+              })}
             </div>
 
-            <p className="mb-2 text-xs font-bold text-ink-faint">{activeCategory.label}</p>
+            <p className="mb-2 text-xs font-bold text-ink-faint">{activeLabel}</p>
 
             <div className="grid max-h-56 grid-cols-8 gap-1 overflow-y-auto pr-1">
               {activeCategory.emojis.map((emoji) => (

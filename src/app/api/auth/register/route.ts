@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { apiError } from "@/lib/api-errors";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/account";
 import { registerSchema } from "@/lib/schemas/auth";
@@ -16,18 +17,18 @@ export async function POST(req: Request) {
     });
 
     if (!invite) {
-      return NextResponse.json({ error: "Lien d'invitation invalide" }, { status: 403 });
+      return await apiError("inviteInvalid", 403);
     }
     if (invite.usedAt) {
-      return NextResponse.json({ error: "Ce lien d'invitation a déjà été utilisé" }, { status: 403 });
+      return await apiError("inviteUsed", 403);
     }
     if (invite.expiresAt < new Date()) {
-      return NextResponse.json({ error: "Ce lien d'invitation a expiré" }, { status: 403 });
+      return await apiError("inviteExpired", 403);
     }
 
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
-      return NextResponse.json({ error: "Impossible de créer ce compte" }, { status: 409 });
+      return await apiError("accountCreationFailed", 409);
     }
 
     const hashedPassword = await hashPassword(password);
@@ -52,6 +53,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ id: user.id, email: user.email, name: user.name }, { status: 201 });
   } catch (error) {
     console.error("[register]", error);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+    return apiError("serverError", 500);
   }
 }

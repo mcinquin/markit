@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import { renderWithIntl } from "@/test-utils/i18n";
 import userEvent from "@testing-library/user-event";
 import { EMOJI_CATEGORIES } from "@/lib/phrase-emojis";
+import fr from "@/i18n/messages/fr.json";
 import { EmojiPicker } from "../emoji-picker";
 
 function ControlledPicker({ onChange }: { onChange: (emoji: string) => void }) {
@@ -25,7 +27,7 @@ function ControlledPicker({ onChange }: { onChange: (emoji: string) => void }) {
 
 function setup() {
   const onChange = jest.fn();
-  render(<ControlledPicker onChange={onChange} />);
+  renderWithIntl(<ControlledPicker onChange={onChange} />);
   const trigger = screen.getByRole("button", { name: "Choisir un emoji" });
   return { onChange, trigger, user: userEvent.setup() };
 }
@@ -56,10 +58,11 @@ describe("EmojiPicker", () => {
   it("change de catégorie", async () => {
     const { trigger, user } = setup();
     const second = EMOJI_CATEGORIES[1];
+    const secondLabel = fr.emojiPicker.categories[second.id];
     await user.click(trigger);
-    await user.click(screen.getByRole("button", { name: second.label }));
+    await user.click(screen.getByRole("button", { name: secondLabel }));
 
-    expect(screen.getByRole("button", { name: second.label })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: secondLabel })).toHaveAttribute(
       "aria-pressed",
       "true"
     );

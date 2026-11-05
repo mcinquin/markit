@@ -1,6 +1,17 @@
+export type EmojiCategoryId =
+  | "smileys"
+  | "gestures"
+  | "people"
+  | "animals"
+  | "food"
+  | "travel"
+  | "activities"
+  | "objects"
+  | "symbols";
+
+/** Le libellé de chaque catégorie est traduit sous `emojiPicker.categories.<id>`. */
 export type EmojiCategory = {
-  id: string;
-  label: string;
+  id: EmojiCategoryId;
   icon: string;
   emojis: string[];
 };
@@ -9,7 +20,6 @@ export type EmojiCategory = {
 export const EMOJI_CATEGORIES: EmojiCategory[] = [
   {
     id: "smileys",
-    label: "Smileys",
     icon: "😀",
     emojis: [
       "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃",
@@ -28,7 +38,6 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   },
   {
     id: "gestures",
-    label: "Gestes",
     icon: "👍",
     emojis: [
       "👋", "🤚", "🖐️", "✋", "🖖", "👌", "🤌", "🤏", "✌️", "🤞",
@@ -41,7 +50,6 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   },
   {
     id: "people",
-    label: "Personnes",
     icon: "👤",
     emojis: [
       "👶", "🧒", "👦", "👧", "🧑", "👱", "👨", "🧔", "👩", "🧓",
@@ -56,7 +64,6 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   },
   {
     id: "animals",
-    label: "Animaux",
     icon: "🐶",
     emojis: [
       "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐻‍❄️", "🐨",
@@ -83,7 +90,6 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   },
   {
     id: "food",
-    label: "Nourriture",
     icon: "🍕",
     emojis: [
       "🍏", "🍎", "🍐", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🫐",
@@ -103,7 +109,6 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   },
   {
     id: "travel",
-    label: "Voyage",
     icon: "✈️",
     emojis: [
       "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐",
@@ -122,7 +127,6 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   },
   {
     id: "activities",
-    label: "Activités",
     icon: "⚽",
     emojis: [
       "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱",
@@ -138,7 +142,6 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   },
   {
     id: "objects",
-    label: "Objets",
     icon: "💡",
     emojis: [
       "⌚", "📱", "📲", "💻", "⌨️", "🖥️", "🖨️", "🖱️", "🖲️", "🕹️",
@@ -167,7 +170,6 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   },
   {
     id: "symbols",
-    label: "Symboles",
     icon: "💯",
     emojis: [
       "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔",

@@ -89,11 +89,17 @@ export function getCheckedPositions(
   return positions;
 }
 
-/** Human-readable (French) label for a winning pattern. */
-export function getPatternLabel(pattern: BingoPattern): string {
-  if (pattern.type === "row") return `Ligne ${pattern.index + 1}`;
-  if (pattern.type === "column") return `Colonne ${pattern.index + 1}`;
-  return pattern.index === 0 ? "Diag ↘" : "Diag ↗";
+export type PatternMessage = {
+  key: "row" | "column" | "diagonalMain" | "diagonalAnti";
+  /** 1-based row / column number. */
+  n: number;
+};
+
+/** Message key (under `play.patterns`) and number describing a winning pattern. */
+export function getPatternMessage(pattern: BingoPattern): PatternMessage {
+  const n = pattern.index + 1;
+  if (pattern.type === "row" || pattern.type === "column") return { key: pattern.type, n };
+  return { key: pattern.index === 0 ? "diagonalMain" : "diagonalAnti", n };
 }
 
 /**

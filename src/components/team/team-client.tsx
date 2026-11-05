@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { apiRequest } from "@/lib/api-client";
 import { canDeleteCard, canDeleteTeam, type TeamActor } from "@/lib/authz-rules";
@@ -28,6 +29,10 @@ function getProgress(card: TeamCardSummary): number {
 /** Vue d'une équipe : code d'invitation, membres, liste des grilles, suppressions. */
 export function TeamClient({ team, initialCards, actor }: Props) {
   const router = useRouter();
+  const t = useTranslations("team");
+  const tCommon = useTranslations("common");
+  const tApi = useTranslations("apiClient");
+  const tDates = useTranslations("dates.relative");
   const [cards, setCards] = useState(initialCards);
   const [copied, setCopied] = useState(false);
   const [deletingTeam, setDeletingTeam] = useState(false);
@@ -40,23 +45,18 @@ export function TeamClient({ team, initialCards, actor }: Props) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError("Copie impossible, le code est : " + team.inviteCode);
+      setError(t("copyFailed", { code: team.inviteCode }));
     }
   }
 
   async function deleteTeam() {
-    if (
-      !confirm(
-        `Supprimer l'équipe « ${team.name} » et toutes ses grilles ? Cette action est définitive.`
-      )
-    ) {
-      return;
-    }
+    if (!confirm(t("confirmDeleteTeam", { name: team.name }))) return;
     setDeletingTeam(true);
     setError("");
     const result = await apiRequest(`/api/teams/${team.id}`, {
       method: "DELETE",
-      fallbackError: "Suppression impossible",
+      fallbackError: t("deleteFailed"),
+      networkError: tApi("network"),
     });
     setDeletingTeam(false);
     if (!result.ok) {
@@ -68,14 +68,13 @@ export function TeamClient({ team, initialCards, actor }: Props) {
   }
 
   async function deleteCard(card: TeamCardSummary) {
-    if (!confirm(`Supprimer la grille « ${card.label} » ? Cette action est définitive.`)) {
-      return;
-    }
+    if (!confirm(t("confirmDeleteCard", { label: card.label }))) return;
     setDeletingCardId(card.id);
     setError("");
     const result = await apiRequest(`/api/cards/${card.id}`, {
       method: "DELETE",
-      fallbackError: "Suppression impossible",
+      fallbackError: t("deleteFailed"),
+      networkError: tApi("network"),
     });
     setDeletingCardId(null);
     if (!result.ok) {
@@ -95,28 +94,23 @@ export function TeamClient({ team, initialCards, actor }: Props) {
             href="/dashboard"
             className="mb-2 inline-block text-sm font-bold text-accent hover:underline"
           >
-            ← Mes équipes
+            {t("back")}
           </Link>
           <h1 className="font-display text-4xl font-semibold text-ink">
             {team.name}
             <span className="text-accent">.</span>
           </h1>
           <p className="mt-1 text-ink-faint">
-            {memberCount} membre{memberCount > 1 ? "s" : ""} · {cards.length} grille
-            {cards.length !== 1 ? "s" : ""}
+            {t("summary", { members: memberCount, cards: cards.length })}
           </p>
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => void copyInviteCode()}
-            className="btn-secondary py-2 text-sm"
-          >
-            {copied ? "Copié" : "Code d'invitation"}
+          <button type="button" onClick={() => void copyInviteCode()} className="btn-secondary py-2 text-sm">
+            {copied ? tCommon("copied") : t("inviteCode")}
           </button>
           <Link href={`/dashboard/teams/${team.id}/create`} className="btn-primary">
-            + Nouvelle grille
+            {t("newCard")}
           </Link>
           {canDeleteTeam(actor) && (
             <button
@@ -125,7 +119,7 @@ export function TeamClient({ team, initialCards, actor }: Props) {
               disabled={deletingTeam}
               className="btn-secondary py-2 text-sm text-danger hover:border-danger"
             >
-              {deletingTeam ? "…" : "Supprimer l'équipe"}
+              {deletingTeam ? "…" : t("deleteTeam")}
             </button>
           )}
         </div>
@@ -145,10 +139,10 @@ export function TeamClient({ team, initialCards, actor }: Props) {
           animate={{ opacity: 1, y: 0 }}
           className="surface -rotate-1 py-16 text-center"
         >
-          <h2 className="mb-2 font-display text-2xl text-ink-muted">Pas encore de grilles</h2>
-          <p className="mb-6 text-ink-faint">Colle ta première grille pour cette semaine.</p>
+          <h2 className="mb-2 font-display text-2xl text-ink-muted">{t("emptyTitle")}</h2>
+          <p className="mb-6 text-ink-faint">{t("emptySubtitle")}</p>
           <Link href={`/dashboard/teams/${team.id}/create`} className="btn-primary inline-block">
-            Créer la première grille
+            {t("createFirst")}
           </Link>
         </motion.div>
       ) : (
@@ -161,6 +155,16 @@ export function TeamClient({ team, initialCards, actor }: Props) {
               canDelete={canDeleteCard(actor, card.createdById)}
               isDeleting={deletingCardId === card.id}
               onDelete={() => void deleteCard(card)}
+              activeLabel={t("active")}
+              cardMeta={t("cardMeta", {
+                rows: card.rows,
+                cols: card.cols,
+                created: formatDistanceToNow(card.createdAt, (key, values) =>
+                  values ? tDates(key as "days", values) : tDates(key as "today")
+                ),
+              })}
+              cellsLabel={t("cells")}
+              deleteLabel={tCommon("delete")}
             />
           ))}
         </ul>
@@ -175,12 +179,20 @@ function TeamCardRow({
   canDelete,
   isDeleting,
   onDelete,
+  activeLabel,
+  cardMeta,
+  cellsLabel,
+  deleteLabel,
 }: {
   card: TeamCardSummary;
   index: number;
   canDelete: boolean;
   isDeleting: boolean;
   onDelete: () => void;
+  activeLabel: string;
+  cardMeta: string;
+  cellsLabel: string;
+  deleteLabel: string;
 }) {
   const progress = getProgress(card);
   const checkedCount = getCheckedCount(card);
@@ -195,10 +207,7 @@ function TeamCardRow({
         index % 2 === 0 ? "hover:rotate-1" : "hover:-rotate-1"
       } ${card.isActive ? "border-accent/40 bg-accent-mist" : ""}`}
     >
-      <Link
-        href={`/play/${card.id}`}
-        className="flex min-w-0 flex-1 items-center gap-4 text-left"
-      >
+      <Link href={`/play/${card.id}`} className="flex min-w-0 flex-1 items-center gap-4 text-left">
         <div
           aria-hidden
           className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-sm text-lg font-bold shadow-[1px_2px_0_rgba(15,23,42,0.08)] ${
@@ -215,11 +224,9 @@ function TeamCardRow({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-display text-lg text-ink">{card.label}</h3>
-            {card.isActive && <span className="chip-accent">En cours</span>}
+            {card.isActive && <span className="chip-accent">{activeLabel}</span>}
           </div>
-          <p className="text-sm text-ink-faint">
-            Grille {card.rows}×{card.cols} · Créée {formatDistanceToNow(card.createdAt)}
-          </p>
+          <p className="text-sm text-ink-faint">{cardMeta}</p>
         </div>
 
         <div className="hidden flex-shrink-0 items-center gap-4 sm:flex">
@@ -227,7 +234,7 @@ function TeamCardRow({
             <p className="text-sm font-bold text-ink-muted">
               {checkedCount}/{card.cells.length}
             </p>
-            <p className="text-xs text-ink-faint">cases</p>
+            <p className="text-xs text-ink-faint">{cellsLabel}</p>
           </div>
           <div className="w-24">
             <div className="h-2 overflow-hidden rounded-sm bg-paper-line">
@@ -250,7 +257,7 @@ function TeamCardRow({
           disabled={isDeleting}
           onClick={onDelete}
         >
-          {isDeleting ? "…" : "Supprimer"}
+          {isDeleting ? "…" : deleteLabel}
         </button>
       )}
     </motion.li>
