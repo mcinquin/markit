@@ -60,6 +60,7 @@
     "roleInvalid": "Invalid role",
     "ownerOnlyRoles": "Only the team owner can change roles",
     "lastOwner": "The team must keep at least one owner",
+    "inviteCodeForbidden": "Only the team owner can regenerate the invite code",
     "concurrentUpdate": "Concurrent update, please try again",
     "labelRequired": "Label required",
     "labelTooLong": "Label too long (max {maxLabel} characters)",
@@ -191,6 +192,9 @@
     "summary": "{members, plural, one {# member} other {# members}} · {cards, plural, one {# card} other {# cards}}",
     "inviteCode": "Invite code",
     "copyFailed": "Copy failed, the code is: {code}",
+    "regenerateInvite": "Regenerate code",
+    "confirmRegenerateInvite": "Regenerate the invite code? The old code will stop working.",
+    "regenerateFailed": "Unable to regenerate the invite code",
     "newCard": "+ New card",
     "deleteTeam": "Delete team",
     "confirmDeleteTeam": "Delete the team “{name}” and all its cards? This cannot be undone.",
@@ -206,8 +210,15 @@
       "title": "Members",
       "noName": "No name",
       "you": "(you)",
+      "joined": "Joined {date}",
       "roleOf": "Role of {name}",
-      "changeFailed": "Unable to change the role"
+      "changeFailed": "Unable to change the role",
+      "remove": "Remove",
+      "leave": "Leave",
+      "confirmRemove": "Remove {name} from the team?",
+      "confirmLeave": "Leave this team?",
+      "removeFailed": "Unable to remove this member",
+      "leaveFailed": "Unable to leave the team"
     }
   },
   "createCard": {

@@ -60,6 +60,7 @@
     "roleInvalid": "Rôle invalide",
     "ownerOnlyRoles": "Seul le propriétaire de l'équipe peut changer les rôles",
     "lastOwner": "L'équipe doit garder au moins un propriétaire",
+    "inviteCodeForbidden": "Seul le propriétaire peut régénérer le code d'invitation",
     "concurrentUpdate": "Modification concurrente, réessaie",
     "labelRequired": "Label requis",
     "labelTooLong": "Label trop long (max {maxLabel} caractères)",
@@ -191,6 +192,9 @@
     "summary": "{members, plural, one {# membre} other {# membres}} · {cards, plural, one {# grille} other {# grilles}}",
     "inviteCode": "Code d'invitation",
     "copyFailed": "Copie impossible, le code est : {code}",
+    "regenerateInvite": "Régénérer le code",
+    "confirmRegenerateInvite": "Régénérer le code d'invitation ? L'ancien code ne fonctionnera plus.",
+    "regenerateFailed": "Impossible de régénérer le code",
     "newCard": "+ Nouvelle grille",
     "deleteTeam": "Supprimer l'équipe",
     "confirmDeleteTeam": "Supprimer l'équipe « {name} » et toutes ses grilles ? Cette action est définitive.",
@@ -206,8 +210,15 @@
       "title": "Membres",
       "noName": "Sans nom",
       "you": "(toi)",
+      "joined": "Rejoint {date}",
       "roleOf": "Rôle de {name}",
-      "changeFailed": "Changement de rôle impossible"
+      "changeFailed": "Changement de rôle impossible",
+      "remove": "Retirer",
+      "leave": "Quitter",
+      "confirmRemove": "Retirer {name} de l'équipe ?",
+      "confirmLeave": "Quitter cette équipe ?",
+      "removeFailed": "Impossible de retirer ce membre",
+      "leaveFailed": "Impossible de quitter l'équipe"
     }
   },
   "createCard": {

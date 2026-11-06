@@ -3,13 +3,15 @@ import {
   canDeleteCard,
   canDeleteTeam,
   canManagePhrases,
+  canRegenerateInviteCode,
+  canRemoveMember,
   hasTeamRole,
   type TeamActor,
 } from "@/lib/authz-rules";
 import type { TeamRole } from "@/lib/team-roles";
 
-function actor(role: TeamRole | null, isSiteAdmin = false): TeamActor {
-  return { userId: "me", role, isSiteAdmin };
+function actor(role: TeamRole | null, isSiteAdmin = false, userId = "me"): TeamActor {
+  return { userId, role, isSiteAdmin };
 }
 
 describe("hasTeamRole", () => {
@@ -89,5 +91,46 @@ describe("canChangeRole", () => {
 
   it("permet de rétrograder un OWNER s'il en reste un autre", () => {
     expect(canChangeRole(actor("OWNER"), { role: "OWNER" }, "ADMIN", 2)).toBe(true);
+  });
+});
+
+describe("canRemoveMember", () => {
+  it("permet à un membre de quitter l'équipe", () => {
+    expect(canRemoveMember(actor("MEMBER"), { userId: "me", role: "MEMBER" }, 1)).toBe(true);
+    expect(canRemoveMember(actor("ADMIN"), { userId: "me", role: "ADMIN" }, 1)).toBe(true);
+  });
+
+  it("bloque le départ du dernier OWNER", () => {
+    expect(canRemoveMember(actor("OWNER"), { userId: "me", role: "OWNER" }, 1)).toBe(false);
+    expect(canRemoveMember(actor("OWNER"), { userId: "me", role: "OWNER" }, 2)).toBe(true);
+  });
+
+  it("autorise ADMIN/OWNER à retirer un MEMBER", () => {
+    expect(canRemoveMember(actor("MEMBER"), { userId: "other", role: "MEMBER" }, 1)).toBe(false);
+    expect(canRemoveMember(actor("ADMIN"), { userId: "other", role: "MEMBER" }, 1)).toBe(true);
+    expect(canRemoveMember(actor("OWNER"), { userId: "other", role: "MEMBER" }, 1)).toBe(true);
+  });
+
+  it("interdit à un ADMIN de retirer un OWNER", () => {
+    expect(canRemoveMember(actor("ADMIN"), { userId: "other", role: "OWNER" }, 2)).toBe(false);
+    expect(canRemoveMember(actor("OWNER"), { userId: "other", role: "OWNER" }, 2)).toBe(true);
+  });
+
+  it("bloque le retrait du dernier OWNER", () => {
+    expect(canRemoveMember(actor("OWNER"), { userId: "other", role: "OWNER" }, 1)).toBe(false);
+    expect(canRemoveMember(actor(null, true), { userId: "other", role: "OWNER" }, 1)).toBe(false);
+  });
+
+  it("autorise l'admin du site à retirer un membre", () => {
+    expect(canRemoveMember(actor(null, true), { userId: "other", role: "MEMBER" }, 1)).toBe(true);
+  });
+});
+
+describe("canRegenerateInviteCode", () => {
+  it("réserve la régénération à OWNER et à l'admin du site", () => {
+    expect(canRegenerateInviteCode(actor("MEMBER"))).toBe(false);
+    expect(canRegenerateInviteCode(actor("ADMIN"))).toBe(false);
+    expect(canRegenerateInviteCode(actor("OWNER"))).toBe(true);
+    expect(canRegenerateInviteCode(actor(null, true))).toBe(true);
   });
 });

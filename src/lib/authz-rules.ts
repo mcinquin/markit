@@ -47,3 +47,28 @@ export function canChangeRole(
   if (target.role === "OWNER" && nextRole !== "OWNER" && ownerCount <= 1) return false;
   return true;
 }
+
+/**
+ * Retirer un membre (ADMIN+) ou quitter soi-même.
+ * Le dernier OWNER ne peut pas partir / être retiré : il doit d'abord transférer la propriété.
+ * Un ADMIN ne peut pas retirer un OWNER (seul un OWNER / admin du site le peut).
+ */
+export function canRemoveMember(
+  actor: TeamActor,
+  target: { userId: string; role: TeamRole },
+  ownerCount: number
+): boolean {
+  if (target.role === "OWNER" && ownerCount <= 1) return false;
+
+  const isSelf = target.userId === actor.userId;
+  if (isSelf) return actor.role !== null;
+
+  if (!hasTeamRole(actor, "ADMIN")) return false;
+  if (target.role === "OWNER" && !hasTeamRole(actor, "OWNER")) return false;
+  return true;
+}
+
+/** Régénérer le code d'invitation : OWNER (ou admin du site). */
+export function canRegenerateInviteCode(actor: TeamActor): boolean {
+  return hasTeamRole(actor, "OWNER");
+}

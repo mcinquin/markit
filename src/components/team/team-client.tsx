@@ -6,7 +6,12 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { apiRequest } from "@/lib/api-client";
-import { canDeleteCard, canDeleteTeam, type TeamActor } from "@/lib/authz-rules";
+import {
+  canDeleteCard,
+  canDeleteTeam,
+  canRegenerateInviteCode,
+  type TeamActor,
+} from "@/lib/authz-rules";
 import { formatDistanceToNow } from "@/app/dashboard/utils/date";
 import type { TeamCardSummary, TeamOverview } from "@/lib/data";
 import { TeamMembers } from "./team-members";
@@ -34,19 +39,39 @@ export function TeamClient({ team, initialCards, actor }: Props) {
   const tApi = useTranslations("apiClient");
   const tDates = useTranslations("dates.relative");
   const [cards, setCards] = useState(initialCards);
+  const [inviteCode, setInviteCode] = useState(team.inviteCode);
   const [copied, setCopied] = useState(false);
+  const [regeneratingInvite, setRegeneratingInvite] = useState(false);
   const [deletingTeam, setDeletingTeam] = useState(false);
   const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   async function copyInviteCode() {
     try {
-      await navigator.clipboard.writeText(team.inviteCode);
+      await navigator.clipboard.writeText(inviteCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError(t("copyFailed", { code: team.inviteCode }));
+      setError(t("copyFailed", { code: inviteCode }));
     }
+  }
+
+  async function regenerateInviteCode() {
+    if (!confirm(t("confirmRegenerateInvite"))) return;
+    setRegeneratingInvite(true);
+    setError("");
+    const result = await apiRequest<{ inviteCode: string }>(`/api/teams/${team.id}/invite-code`, {
+      method: "POST",
+      fallbackError: t("regenerateFailed"),
+      networkError: tApi("network"),
+    });
+    setRegeneratingInvite(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+    setInviteCode(result.data.inviteCode);
+    setCopied(false);
   }
 
   async function deleteTeam() {
@@ -109,6 +134,16 @@ export function TeamClient({ team, initialCards, actor }: Props) {
           <button type="button" onClick={() => void copyInviteCode()} className="btn-secondary py-2 text-sm">
             {copied ? tCommon("copied") : t("inviteCode")}
           </button>
+          {canRegenerateInviteCode(actor) && (
+            <button
+              type="button"
+              onClick={() => void regenerateInviteCode()}
+              disabled={regeneratingInvite}
+              className="btn-secondary py-2 text-sm"
+            >
+              {regeneratingInvite ? "…" : t("regenerateInvite")}
+            </button>
+          )}
           <Link href={`/dashboard/teams/${team.id}/create`} className="btn-primary">
             {t("newCard")}
           </Link>
