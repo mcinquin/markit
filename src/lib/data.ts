@@ -61,7 +61,12 @@ const teamOverviewSelect = {
   _count: { select: { members: true } },
   members: {
     orderBy: { joinedAt: "asc" },
-    select: { id: true, role: true, user: { select: { id: true, name: true } } },
+    select: {
+      id: true,
+      role: true,
+      joinedAt: true,
+      user: { select: { id: true, name: true } },
+    },
   },
 } satisfies Prisma.TeamSelect;
 

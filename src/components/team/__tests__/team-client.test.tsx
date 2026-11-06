@@ -11,6 +11,8 @@ jest.mock("next/navigation", () => ({
   useRouter: () => jest.requireActual("@/test-utils/mocks").routerMock,
 }));
 
+const joinedAt = new Date("2024-01-01T00:00:00.000Z");
+
 const team: TeamOverview = {
   id: "t1",
   name: "Produit",
@@ -18,9 +20,9 @@ const team: TeamOverview = {
   createdById: "owner",
   _count: { members: 3 },
   members: [
-    { id: "m-owner", role: "OWNER", user: { id: "owner", name: "Olga" } },
-    { id: "m-me", role: "MEMBER", user: { id: "me", name: "Moi" } },
-    { id: "m-other", role: "MEMBER", user: { id: "someone-else", name: "Sam" } },
+    { id: "m-owner", role: "OWNER", joinedAt, user: { id: "owner", name: "Olga" } },
+    { id: "m-me", role: "MEMBER", joinedAt, user: { id: "me", name: "Moi" } },
+    { id: "m-other", role: "MEMBER", joinedAt, user: { id: "someone-else", name: "Sam" } },
   ],
 };
 
@@ -172,5 +174,96 @@ describe("TeamClient — membres", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Refusé");
     expect(select).toHaveValue("MEMBER");
+  });
+
+  it("affiche la date d'arrivée des membres", () => {
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={member} />);
+
+    const list = screen.getByRole("region", { name: "Membres" });
+    expect(within(list).getAllByText(/Rejoint /).length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("propose à un MEMBER de quitter, sans pouvoir retirer les autres", () => {
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={member} />);
+
+    const list = screen.getByRole("region", { name: "Membres" });
+    expect(within(list).getByRole("button", { name: "Quitter" })).toBeInTheDocument();
+    expect(within(list).queryByRole("button", { name: "Retirer" })).not.toBeInTheDocument();
+  });
+
+  it("propose à l'OWNER de retirer un membre", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ ok: true, left: false }));
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={owner} />);
+    jest.spyOn(window, "confirm").mockReturnValue(true);
+
+    const list = screen.getByRole("region", { name: "Membres" });
+    await userEvent.click(within(list).getAllByRole("button", { name: "Retirer" })[0]!);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/teams/t1/members/m-me",
+      expect.objectContaining({ method: "DELETE" })
+    );
+    expect(within(list).queryByText("Moi")).not.toBeInTheDocument();
+  });
+
+  it("redirige vers le dashboard après avoir quitté l'équipe", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ ok: true, left: true }));
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={member} />);
+    jest.spyOn(window, "confirm").mockReturnValue(true);
+
+    await userEvent.click(screen.getByRole("button", { name: "Quitter" }));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/teams/t1/members/m-me",
+      expect.objectContaining({ method: "DELETE" })
+    );
+    expect(routerMock.push).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("ne propose pas au dernier OWNER de quitter", () => {
+    const soloOwnerTeam: TeamOverview = {
+      ...team,
+      _count: { members: 1 },
+      members: [{ id: "m-owner", role: "OWNER", joinedAt, user: { id: "owner", name: "Olga" } }],
+    };
+    renderWithIntl(<TeamClient team={soloOwnerTeam} initialCards={[]} actor={owner} />);
+
+    const list = screen.getByRole("region", { name: "Membres" });
+    expect(within(list).queryByRole("button", { name: "Quitter" })).not.toBeInTheDocument();
+  });
+});
+
+describe("TeamClient — code d'invitation", () => {
+  let fetchMock: ReturnType<typeof mockFetch>;
+
+  beforeEach(() => {
+    fetchMock = mockFetch();
+    jest.spyOn(window, "confirm").mockReturnValue(true);
+  });
+
+  it("propose la régénération à l'OWNER uniquement", () => {
+    const { unmount } = renderWithIntl(<TeamClient team={team} initialCards={cards} actor={member} />);
+    expect(screen.queryByRole("button", { name: "Régénérer le code" })).not.toBeInTheDocument();
+    unmount();
+
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={owner} />);
+    expect(screen.getByRole("button", { name: "Régénérer le code" })).toBeInTheDocument();
+  });
+
+  it("met à jour le code après régénération", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ inviteCode: "NEW-CODE" }));
+    renderWithIntl(<TeamClient team={team} initialCards={cards} actor={owner} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Régénérer le code" }));
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/teams/t1/invite-code",
+      expect.objectContaining({ method: "POST" })
+    );
+
+    const writeText = jest.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+    await userEvent.click(screen.getByRole("button", { name: "Code d'invitation" }));
+    expect(writeText).toHaveBeenCalledWith("NEW-CODE");
   });
 });
