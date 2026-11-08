@@ -113,13 +113,7 @@ app.prepare().then(() => {
       if (typeof cardId === "string") leaveCard(socket, cardId);
     });
 
-    // Les cases cochées sont diffusées par POST /api/cards/:id/check, après écriture en BDD.
-
-    socket.on("bingo", ({ cardId } = {}) => {
-      if (typeof cardId !== "string" || !socket.rooms.has(roomName(cardId))) return;
-      // Aux autres joueurs seulement — le local a déjà fêté au clic
-      socket.to(roomName(cardId)).emit("bingo-achieved", { userName });
-    });
+    // Cases cochées et bingos sont diffusés par POST /api/cards/:id/check, après écriture en BDD.
 
     socket.on("disconnect", () => {
       for (const cardId of Array.from(cardRooms.keys())) {

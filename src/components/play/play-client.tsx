@@ -9,7 +9,7 @@ import type { Socket } from "socket.io-client";
 import { apiRequest } from "@/lib/api-client";
 import { getFreeCenterPosition, getPatternMessage } from "@/lib/bingo";
 import type { PlayCard, PlayCell } from "@/lib/data";
-import type { CellUpdatedEvent } from "@/lib/realtime";
+import type { BingoAchievedEvent, CellUpdatedEvent } from "@/lib/realtime";
 import { BingoCell } from "./bingo-cell";
 import { getCardPatterns, getCheckedCellIds, setCellChecked } from "./card-state";
 import { useWindowSize } from "./use-window-size";
@@ -70,7 +70,7 @@ export function PlayClient({ initialCard, currentUser }: Props) {
     const onCellUpdated = ({ cellId, checked, userName }: CellUpdatedEvent) => {
       setCard((prev) => setCellChecked(prev, cellId, checked ? { name: userName } : null));
     };
-    const onBingoAchieved = ({ userName }: { userName: string }) => celebrateBingo(userName);
+    const onBingoAchieved = ({ userName }: BingoAchievedEvent) => celebrateBingo(userName);
 
     void import("@/lib/socket").then(({ getSocket }) => {
       if (cancelled) return;
@@ -127,12 +127,6 @@ export function PlayClient({ initialCard, currentUser }: Props) {
     );
     setCard(nextCard);
     setError("");
-
-    // Confettis dans le même tick que le clic ; les autres joueurs sont prévenus via le socket
-    if (isNowChecked && getCardPatterns(nextCard).length > bingoPatterns.length) {
-      celebrateBingo(currentUser.name || t("you"));
-      socketRef.current?.emit("bingo", { cardId });
-    }
 
     const result = await apiRequest(`/api/cards/${cardId}/check`, {
       method: "POST",

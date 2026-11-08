@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { apiError } from "@/lib/api-errors";
 import { requireApiAccountReady } from "@/lib/api-auth";
+import { persistNewBingos } from "@/lib/bingo-achievements";
 import { prisma } from "@/lib/prisma";
 import { getCardIfMember } from "@/lib/authz";
 import { emitCellUpdated } from "@/lib/realtime";
@@ -40,6 +41,16 @@ export async function POST(req: Request, { params }: RouteContext) {
       update: {},
     });
     emitCellUpdated(cardId, { cellId, checked: true, userName });
+    await persistNewBingos({
+      cardId,
+      userId: user.id,
+      userName,
+      geometry: {
+        rows: access.rows,
+        cols: access.cols,
+        freeCenter: access.freeCenter,
+      },
+    });
     return NextResponse.json(checkedCell);
   }
 
