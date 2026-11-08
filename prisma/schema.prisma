@@ -28,6 +28,7 @@ model User {
   teamsCreated  Team[]        @relation("TeamCreatedBy")
   cardsCreated  BingoCard[]   @relation("CardCreatedBy")
   checkedCells  CheckedCell[]
+  bingos        Bingo[]
   invitesSent   InviteToken[] @relation("InviteCreatedBy")
 }
 
@@ -128,6 +129,7 @@ model BingoCard {
   team      Team  @relation(fields: [teamId], references: [id], onDelete: Cascade)
   createdBy User? @relation("CardCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
   cells     Cell[]
+  bingos    Bingo[]
 }
 
 model Cell {
@@ -153,6 +155,27 @@ model CheckedCell {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([cellId])
+}
+
+enum BingoPatternType {
+  row
+  column
+  diagonal
+}
+
+/// Persisted bingo achievement for a card pattern (who completed it and when).
+model Bingo {
+  id        String           @id @default(cuid())
+  cardId    String
+  userId    String
+  type      BingoPatternType
+  index     Int
+  createdAt DateTime         @default(now())
+
+  card BingoCard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([cardId, type, index])
 }
 
 model InviteToken {
