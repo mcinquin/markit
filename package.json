@@ -1,6 +1,6 @@
 {
   "name": "markit",
-  "version": "1.11.6",
+  "version": "1.11.9",
   "private": true,
   "engines": {
     "node": ">=26 <27"
@@ -40,11 +40,11 @@
     "@prisma/client": "^7.10.1",
     "@types/bcryptjs": "^3.0.0",
     "bcryptjs": "^3.0.3",
-    "dotenv": "^18.0.9",
+    "dotenv": "^18.0.10",
     "framer-motion": "^14.9.0",
-    "next": "16.4.5",
+    "next": "16.4.6",
     "next-auth": "^4.24.13",
-    "next-intl": "^4.14.9",
+    "next-intl": "^4.15.0",
     "pg": "^8.23.1",
     "pino": "^10.4.0",
     "react": "19.3.1",
@@ -71,7 +71,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "eslint": "^10.14.0",
-    "eslint-config-next": "16.4.5",
+    "eslint-config-next": "16.4.6",
     "husky": "^9.1.7",
     "jest": "^30.5.2",
     "jest-environment-jsdom": "^30.5.2",
