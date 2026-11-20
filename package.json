@@ -90,6 +90,7 @@
     "sharp": "^0.35.5",
     "nanoid": "3.3.18",
     "deepmerge-ts": "^8.0.2",
+    "effect": "^3.22.5",
     "mysql2": "^3.24.3",
     "undici": "^6.28.1",
     "ip-address": "^10.7.1",
